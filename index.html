@@ -1,0 +1,2683 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Excel From Zero — start with the very first click</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600&family=Public+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F6F4F9;
+  --sheet:#FFFFFF;
+  --ink:#2E2B36;
+  --ink-soft:#6B6577;
+  --ink-faint:#A19BAC;
+  --ledger:#46766A;
+  --ledger-dim:#E3F0EB;
+  --ochre:#8F6626;
+  --ochre-dim:#FBF1DF;
+  --brick:#9E564D;
+  --brick-dim:#FAE9E6;
+  --line:#DFDAE7;
+  --line-soft:#EEEAF3;
+  --sans:'Public Sans',system-ui,sans-serif;
+  --disp:'Bricolage Grotesque','Public Sans',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);
+  background-image:
+    radial-gradient(900px 520px at 12% -8%, #FCEDF3 0%, rgba(252,237,243,0) 62%),
+    radial-gradient(760px 480px at 92% 4%, #E6F2F7 0%, rgba(230,242,247,0) 60%),
+    radial-gradient(880px 600px at 60% 100%, #EFEBFA 0%, rgba(239,235,250,0) 58%);
+  background-attachment:fixed;background-repeat:no-repeat;
+  color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:880px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--disp);font-weight:600;line-height:1.15;margin:0}
+a{color:var(--ledger)}
+button{font-family:var(--sans);font-size:15px;cursor:pointer;border-radius:6px;transition:background .12s,border-color .12s}
+button:focus-visible,input:focus-visible{outline:2px solid var(--ledger);outline-offset:2px}
+.btn{background:var(--ledger);color:#fff;border:1px solid var(--ledger);padding:11px 20px;font-weight:500;border-radius:9px}
+.btn:hover{background:#25493B}
+.btn-quiet{background:rgba(255,255,255,.75);color:var(--ink);border:1px solid var(--line);padding:9px 15px;font-size:14px;border-radius:9px}
+.btn-quiet:hover{background:var(--ledger-dim);border-color:var(--ledger)}
+
+/* ---- persistent formula-bar chrome, the site's signature ---- */
+.chrome{position:sticky;top:0;z-index:40;background:rgba(246,244,249,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.chrome-in{max-width:880px;margin:0 auto;padding:9px 20px;display:flex;align-items:center;gap:9px}
+.namebox{font-family:var(--mono);font-size:13px;background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:5px 9px;min-width:58px;text-align:center;color:var(--ledger);font-weight:500;flex:none}
+.fx{font-family:var(--disp);font-size:14px;color:var(--ink-faint);flex:none;font-style:italic;padding:0 2px}
+.fbar{flex:1;min-width:0;font-family:var(--mono);font-size:13px;background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:5px 10px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbar.empty{color:var(--ink-faint)}
+.chrome .btn-quiet{flex:none;padding:5px 11px;font-size:13px}
+
+/* ---- landing ---- */
+.hero{padding:52px 0 30px}
+.eyebrow{font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);letter-spacing:.02em;margin:0 0 14px;text-transform:lowercase}
+.hero h1{font-size:clamp(30px,5.2vw,46px);letter-spacing:-.022em;margin-bottom:14px}
+.hero p.lede{font-size:18px;color:var(--ink-soft);margin:0 0 26px;max-width:56ch}
+code.k{font-family:var(--mono);font-size:.9em;background:var(--sheet);border:1px solid var(--line-soft);border-radius:4px;padding:1px 6px}
+.section{padding:34px 0}
+.rule{height:1px;background:var(--line);margin:0}
+
+/* ---- sheet ---- */
+.sheet-shell{background:var(--sheet);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(70,60,90,.05),0 8px 26px rgba(70,60,90,.045)}
+table.sheet{border-collapse:collapse;table-layout:fixed;width:100%;user-select:none;font-size:14px}
+table.sheet td,table.sheet th{border:1px solid var(--line-soft);padding:0;height:31px;overflow:hidden}
+.hdr{background:#EFF3EF;color:var(--ink-soft);font-family:var(--mono);font-size:11.5px;font-weight:400;text-align:center;position:relative}
+.hdr.on{background:var(--ledger-dim);color:var(--ledger)}
+.corner{width:34px;background:#EFF3EF}
+.rowhdr{width:34px}
+.grip{position:absolute;top:0;right:-3px;width:7px;height:100%;cursor:col-resize;z-index:5}
+.cell{padding:4px 8px;font-variant-numeric:tabular-nums;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;cursor:cell}
+.cell.num{text-align:right;font-family:var(--mono)}
+.cell.txt{text-align:left}
+.cell.head{color:var(--ink-soft);font-weight:500}
+.cell.inrange{background:var(--ledger-dim)}
+.cell.sel{outline:2px solid var(--ledger);outline-offset:-2px;background:var(--sheet)}
+.cell.err{color:var(--brick);font-family:var(--mono)}
+.cell.over{color:var(--ochre);font-family:var(--mono);letter-spacing:-.5px}
+.handle{position:absolute;right:-4px;bottom:-4px;width:9px;height:9px;background:var(--ledger);border:1.5px solid var(--sheet);cursor:crosshair;z-index:6}
+.cell.sel{position:relative}
+.cell input{width:100%;height:100%;border:0;outline:0;background:transparent;font-family:var(--mono);font-size:14px;color:var(--ink);padding:0;text-align:inherit}
+.statusbar{display:flex;gap:18px;padding:7px 12px;border-top:1px solid var(--line);background:#F6F8F6;font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+
+/* ---- lesson ---- */
+.task{background:var(--sheet);border:1px solid var(--line);border-left:3px solid var(--ledger);border-radius:0 12px 12px 0;padding:16px 20px;margin:0 0 18px;box-shadow:0 1px 2px rgba(70,60,90,.04)}
+.task h3{font-size:17px;margin-bottom:5px}
+.task p{margin:0;color:var(--ink-soft);font-size:15.5px}
+.teach{font-size:15.5px;color:var(--ink-soft);margin:0 0 16px;max-width:66ch}
+.teach b{color:var(--ink);font-weight:500}
+.fb{margin-top:14px;padding:13px 16px;border-radius:12px;font-size:15px;display:none;line-height:1.6}
+.fb.show{display:block}
+.fb.ok{background:var(--ledger-dim);color:#1D4235}
+.fb.no{background:var(--ochre-dim);color:#6E4605}
+.fb.bad{background:var(--brick-dim);color:#7A2418}
+.lessonbar{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
+
+/* ---- lesson list ---- */
+.lgrid{margin-top:10px}
+.lgrid-in{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:9px;margin-top:11px}
+.lcard{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:13px 15px;text-align:left;cursor:pointer;display:flex;gap:11px;align-items:flex-start;font-size:15px;color:var(--ink)}
+.lcard:hover{border-color:var(--ledger);background:#FBFDFB}
+.lcard .n{font-family:var(--mono);font-size:12px;color:var(--ledger);background:var(--ledger-dim);border-radius:3px;padding:2px 6px;flex:none;margin-top:1px}
+.lcard .t{font-weight:500;display:block;line-height:1.35}
+.lcard .s{color:var(--ink-faint);font-size:13.5px;display:block;margin-top:1px}
+.lcard.done{border-color:var(--ledger)}
+.lcard.done .n{background:var(--ledger);color:#fff}
+footer{padding:34px 0 50px;color:var(--ink-faint);font-size:13.5px}
+.tools{margin-top:12px;display:none}
+.tools.on{display:block}
+.toolrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
+.toolrow label{font-size:13px;color:var(--ink-soft)}
+.toolrow select{font-family:var(--sans);font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:5px;background:var(--sheet);color:var(--ink)}
+.chartbox{margin-top:10px;background:var(--sheet);border:1px solid var(--line);border-radius:14px;padding:16px}
+.chartbox svg{display:block;width:100%;height:auto}
+.pivotout{margin-top:10px;background:var(--sheet);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.pivotout table{width:100%;border-collapse:collapse;font-size:14px}
+.pivotout th{background:#EFF3EF;text-align:left;font-weight:500;font-size:12.5px;color:var(--ink-soft);padding:7px 11px;border-bottom:1px solid var(--line)}
+.pivotout td{padding:6px 11px;border-bottom:1px solid var(--line-soft);font-variant-numeric:tabular-nums}
+.pivotout td.n{text-align:right;font-family:var(--mono)}
+.pivotout tr.tot td{font-weight:500;border-top:1px solid var(--line)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.seg button{border:0;background:var(--sheet);padding:6px 12px;font-size:13.5px;border-radius:0;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ledger);color:#fff}
+.mod{margin-top:30px}
+.mod:first-child{margin-top:14px}
+.mod-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.mod-h h3{font-size:19px;letter-spacing:-.01em}
+.mod-tag{font-family:var(--mono);font-size:11.5px;color:var(--ledger);background:var(--ledger-dim);border-radius:3px;padding:2px 7px}
+.mod-count{font-family:var(--mono);font-size:12px;color:var(--ink-faint);margin-left:auto}
+.mod-blurb{font-size:15px;color:var(--ink-soft);margin:5px 0 0;max-width:62ch}
+.bar{height:3px;background:var(--line-soft);border-radius:2px;overflow:hidden;margin-top:11px}
+.bar i{display:block;height:100%;background:var(--ledger);width:0;transition:width .3s}
+.mod.done .mod-tag{background:var(--ledger);color:#fff}
+.milestone{background:var(--ledger-dim);border-radius:14px;padding:18px 20px;margin-top:14px;display:none;animation:rise .35s ease-out}
+.milestone.on{display:block}
+.milestone h3{font-size:17px;margin-bottom:6px;color:#1D4235}
+.milestone p{margin:0;font-size:15px;color:#26503F;line-height:1.6}
+.milestone ul{margin:8px 0 0;padding-left:19px;font-size:15px;color:#26503F}
+.milestone li{margin:2px 0}
+.crumb{font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);margin:0 0 14px}
+.crumb b{color:var(--ledger);font-weight:500}
+.demo{background:var(--sheet);border:1px solid var(--line);border-radius:16px;padding:18px;margin:0 0 26px;max-width:520px;box-shadow:0 1px 3px rgba(70,60,90,.05),0 10px 30px rgba(70,60,90,.05)}
+.demo-bar{display:flex;align-items:center;gap:7px;margin-bottom:11px}
+.demo-nb{font-family:var(--mono);font-size:12.5px;background:#F6F8F6;border:1px solid var(--line);border-radius:4px;padding:4px 8px;min-width:44px;text-align:center;color:var(--ledger)}
+.demo-fx{font-family:var(--disp);font-style:italic;color:var(--ink-faint);font-size:13px}
+.demo-fb{flex:1;min-width:0;font-family:var(--mono);font-size:12.5px;background:#F6F8F6;border:1px solid var(--line);border-radius:4px;padding:4px 9px;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.demo table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:14px}
+.demo td,.demo th{border:1px solid var(--line-soft);padding:5px 8px;height:30px}
+.demo th{background:#EFF3EF;color:var(--ink-soft);font-family:var(--mono);font-size:11px;font-weight:400;text-align:center}
+.demo td.n{text-align:right;font-family:var(--mono)}
+.demo .rh{width:28px;background:#EFF3EF;color:var(--ink-soft);font-family:var(--mono);font-size:11px;text-align:center}
+.demo input{width:100%;height:100%;border:0;outline:0;background:var(--ledger-dim);font-family:var(--mono);font-size:14px;text-align:right;padding:5px 8px;color:var(--ink);border-radius:0}
+.demo-msg{margin:11px 0 0;font-size:14.5px;color:var(--ink-faint);line-height:1.6;min-height:24px}
+.pill{display:inline-block;font-size:13px;color:var(--ledger);background:var(--ledger-dim);border-radius:20px;padding:3px 11px;margin:0 0 16px;font-weight:500}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.fb.show{animation:rise .28s ease-out}
+.ring{display:flex;align-items:center;gap:16px;background:var(--sheet);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:0 0 6px;box-shadow:0 1px 3px rgba(70,60,90,.05)}
+.ring svg{flex:none}
+.ring .rt{font-family:var(--disp);font-size:17px;font-weight:600;margin:0}
+.ring .rs{font-size:14.5px;color:var(--ink-soft);margin:2px 0 0;line-height:1.55}
+.navpair{margin-left:auto;display:flex;gap:8px}
+@media(max-width:560px){.navpair{margin-left:0;width:100%;margin-top:4px}.navpair button{flex:1}}
+.btn-quiet[disabled]{opacity:.4;cursor:default}
+.btn-quiet[disabled]:hover{background:rgba(255,255,255,.75);border-color:var(--line)}
+.reassure{background:#FBF6EC;border:1px solid #EFE2CB;border-radius:12px;padding:11px 15px;margin:0 0 16px;font-size:14.5px;color:#7A6134;display:none}
+.reassure.on{display:block}
+.finale{background:var(--ledger-dim);border-radius:16px;padding:24px 26px;margin-top:16px;display:none;animation:rise .4s ease-out}
+.finale.on{display:block}
+.finale h2{font-size:23px;color:#1D4235;margin-bottom:10px;letter-spacing:-.015em}
+.finale p{margin:0 0 8px;font-size:16px;color:#26503F;line-height:1.65;max-width:56ch}
+.hide{display:none!important}
+@media(max-width:640px){
+  .hero{padding:34px 0 22px}
+  .chrome-in{padding:8px 14px;gap:7px}
+  .wrap{padding:0 14px}
+  .fbar{font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="chrome">
+  <div class="chrome-in">
+    <div class="namebox" id="namebox">A1</div>
+    <div class="fx">fx</div>
+    <div class="fbar empty" id="fbar">Excel From Zero</div>
+    <button class="btn-quiet" id="tolist">All lessons</button>
+  </div>
+</div>
+
+<!-- ============ LANDING ============ -->
+<main id="landing">
+  <div class="wrap">
+    <section class="hero">
+      <p class="eyebrow">for people who have never opened a spreadsheet</p>
+      <h1>Nobody ever showed you the little square.</h1>
+      <p class="lede">Excel isn't hard. It's just that everyone teaching it forgot they once had to be told what a cell was. So here is a real spreadsheet. Click the green cell, type <code class="k">=B2+B3</code>, press enter.</p>
+
+      <div class="demo">
+        <div class="demo-bar">
+          <div class="demo-nb" id="dnb">B4</div>
+          <div class="demo-fx">fx</div>
+          <div class="demo-fb" id="dfb">empty</div>
+        </div>
+        <table>
+          <tr><th class="rh"></th><th>A</th><th style="width:118px">B</th></tr>
+          <tr><td class="rh">1</td><td style="color:var(--ink-soft)">Item</td><td class="n" style="color:var(--ink-soft)">Amount</td></tr>
+          <tr><td class="rh">2</td><td>Coffee sales</td><td class="n">340</td></tr>
+          <tr><td class="rh">3</td><td>Food sales</td><td class="n">210</td></tr>
+          <tr><td class="rh">4</td><td style="font-weight:500">Total</td><td style="padding:0"><input id="dcell" type="text" placeholder="type here" aria-label="Cell B4"></td></tr>
+        </table>
+        <p class="demo-msg" id="dmsg">Whatever you type is calculated exactly the way Excel would.</p>
+      </div>
+
+      <button class="btn" id="start">Start lesson 1</button>
+      <button class="btn-quiet" id="godiag" style="margin-left:8px">Not sure where to start?</button>
+      <button class="btn-quiet" id="browse" style="margin-left:8px">See all thirteen parts</button>
+    </section>
+  </div>
+  <div class="rule"></div>
+  <div class="wrap">
+    <section class="section">
+      <h2 style="font-size:21px;margin-bottom:8px">Thirteen parts, fifty-two lessons</h2>
+      <p class="teach">Each part takes about ten minutes and ends somewhere definite — a thing you can now do that you could not do before. Start at part 1 if you have never opened Excel. Skip ahead if you already know the earlier bits. You do every lesson yourself in a real grid on this page: no videos, no account, no download.</p>
+      <div class="ring" id="ring"></div>
+      <div class="lgrid" id="lgrid"></div>
+    </section>
+  </div>
+</main>
+
+<!-- ============ LESSON ============ -->
+<main id="diag" class="hide">
+  <div class="wrap">
+    <section style="padding:26px 0 0">
+      <p class="eyebrow" id="dgnum">check 1 of 7</p>
+      <div class="task">
+        <h3 id="dgtitle"></h3>
+        <p id="dgtask"></p>
+      </div>
+      <p class="teach" id="dgnote" style="font-size:14.5px"></p>
+      <div class="sheet-shell">
+        <div id="dggrid"></div>
+        <div class="statusbar"><span id="dgst">Selected: A1</span></div>
+      </div>
+      <div class="lessonbar">
+        <button class="btn" id="dgnext">I'm done, next</button>
+        <button class="btn-quiet" id="dgskip">I don't know how</button>
+      </div>
+      <div id="dgresult" class="hide" style="margin-top:22px"></div>
+    </section>
+  </div>
+</main>
+
+<main id="lesson" class="hide">
+  <div class="wrap">
+    <section style="padding:26px 0 0">
+      <p class="eyebrow" id="lnum">lesson 1 of 10</p>
+      <div class="task">
+        <h3 id="ltitle"></h3>
+        <p id="ltask"></p>
+      </div>
+      <p class="teach" id="lteach"></p>
+      <div class="reassure" id="reassure">You cannot break anything here. Get it wrong as many times as you like &mdash; nothing is saved to a real file, and <b>Start this one over</b> puts the sheet back exactly as it was.</div>
+      <div class="sheet-shell">
+        <div id="grid"></div>
+        <div class="statusbar">
+          <span id="st-sel">Selected: A1</span>
+          <span id="st-count"></span>
+          <span id="st-sum"></span>
+        </div>
+      </div>
+      <div class="tools" id="tools"></div>
+      <div class="fb" id="fb"></div>
+      <div class="milestone" id="milestone"></div>
+      <div class="finale" id="finale"></div>
+      <div class="lessonbar">
+        <button class="btn hide" id="next">Next lesson</button>
+        <button class="btn-quiet" id="undo">Undo</button>
+        <button class="btn-quiet" id="reset">Start this one over</button>
+        <button class="btn-quiet" id="hintbtn">Stuck?</button>
+        <span class="navpair">
+          <button class="btn-quiet" id="prev" aria-label="Previous lesson">&larr; Back</button>
+          <button class="btn-quiet" id="skipnext" aria-label="Next lesson">Skip ahead &rarr;</button>
+        </span>
+      </div>
+      <p class="teach" id="hint" style="display:none;margin-top:14px"></p>
+    </section>
+  </div>
+</main>
+
+<footer><div class="wrap">Excel From Zero — a practice grid, not a video course. Built for Australian undergraduates starting at zero. <a href="#" id="resetall">Clear my progress</a></div></footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- sheet model ---------------- */
+var COLS=['A','B','C','D','E','F'];
+var S={cells:{},widths:{},rows:9,cols:5,undoStack:[],undoCount:0,resized:{},hidden:{},valid:null,rejected:0};
+var sel={a:'A1',b:'A1'},editing=null,lesson=0,filledByDrag=0;
+
+function ref(c,r){return COLS[c]+(r+1);}
+function parseRef(s){var m=/^\$?([A-F])\$?(\d+)$/.exec(s.toUpperCase());if(!m)return null;return{c:COLS.indexOf(m[1]),r:parseInt(m[2],10)-1};}
+function raw(k){var c=S.cells[k];return c?c.v:'';}
+function setRaw(k,v){if(v==='')delete S.cells[k];else S.cells[k]={v:v};}
+
+/* ---------------- formula engine ---------------- */
+function rangeRefs(a,b){
+  var p=parseRef(a),q=parseRef(b);if(!p||!q)return null;
+  var out=[],c1=Math.min(p.c,q.c),c2=Math.max(p.c,q.c),r1=Math.min(p.r,q.r),r2=Math.max(p.r,q.r);
+  for(var c=c1;c<=c2;c++)for(var r=r1;r<=r2;r++)out.push(ref(c,r));
+  return out;
+}
+function numOf(k){var v=val(k);return typeof v==='number'?v:null;}
+var evaluating={};
+function val(k){
+  var r=raw(k);
+  if(r==='')return '';
+  if(r.charAt(0)==="'")return r.slice(1);
+  if(r.charAt(0)!=='=')return isFinite(r)&&r.trim()!==''?parseFloat(r):r;
+  if(evaluating[k])return '#CIRC!';
+  evaluating[k]=1;
+  var out;
+  try{out=evalFormula(r.slice(1));}catch(e){out='#ERROR!';}
+  delete evaluating[k];
+  return out;
+}
+function splitTop(str){
+  var out=[],d=0,cur='';
+  for(var i=0;i<str.length;i++){
+    var ch=str.charAt(i);
+    if(ch==='(')d++;else if(ch===')')d--;
+    if(ch===','&&d===0){out.push(cur);cur='';}else cur+=ch;
+  }
+  out.push(cur);return out;
+}
+var LOGIC={IF:1,AND:1,OR:1,NOT:1,IFERROR:1};
+function findLogic(e){
+  for(var i=0;i<e.length;i++){
+    var m=/^(IFERROR|IF|AND|OR|NOT)\(/.exec(e.slice(i));
+    if(!m)continue;
+    if(i>0&&/[A-Z0-9.]/.test(e.charAt(i-1)))continue;
+    var d=0,j=i+m[1].length;
+    for(var k=j;k<e.length;k++){
+      if(e.charAt(k)==='(')d++;
+      else if(e.charAt(k)===')'){d--;if(d===0){
+        var args=e.slice(j+1,k);
+        if(/(^|[^A-Z0-9.])(IFERROR|IF|AND|OR|NOT)\(/.test(args))break;
+        return {name:m[1],args:args,start:i,end:k+1};
+      }}
+    }
+  }
+  return null;
+}
+function litOf(x,lits){
+  var m=/^\u0001(\d+)\u0001$/.exec(x);
+  return m?lits[+m[1]]:null;
+}
+function splitAmp(x){
+  var out=[],d=0,cur='';
+  for(var i=0;i<x.length;i++){
+    var ch=x.charAt(i);
+    if(ch==='(')d++;else if(ch===')')d--;
+    if(ch==='&'&&d===0){out.push(cur);cur='';}else cur+=ch;
+  }
+  out.push(cur);return out;
+}
+function hasTopCompare(x){
+  var d=0;
+  for(var i=0;i<x.length;i++){
+    var ch=x.charAt(i);
+    if(ch==='(')d++;else if(ch===')')d--;
+    if(d!==0)continue;
+    var two=x.substr(i,2);
+    if(two==='<>'||two==='>='||two==='<=')return true;
+    if(ch==='='||ch==='>'||ch==='<')return true;
+  }
+  return false;
+}
+function evalArg(x,lits){
+  x=x.replace(/^\s+|\s+$/g,'');
+  var amp=splitAmp(x);
+  if(amp.length>1){
+    var out='';
+    for(var ai=0;ai<amp.length;ai++){
+      var pv=evalArg(amp[ai],lits);
+      if(typeof pv==='string'&&pv.charAt(0)==='#')return pv;
+      out+=(typeof pv==='number')?fmtNum(pv):String(pv);
+    }
+    return out;
+  }
+  var L=litOf(x,lits);
+  if(L!==null)return L;
+  if(x==='')return '';
+  if(x==='TRUE')return 1;
+  if(x==='FALSE')return 0;
+  var bare=x.replace(/\$/g,'');
+  if(/^[A-F]\d+$/.test(bare))return val(bare);
+  return evalCore(x,lits);
+}
+function evalBool(x,lits){
+  var d=0,op=null,at=-1;
+  for(var i=0;i<x.length;i++){
+    var ch=x.charAt(i);
+    if(ch==='(')d++;else if(ch===')')d--;
+    if(d!==0)continue;
+    var two=x.substr(i,2);
+    if(two==='<>'||two==='>='||two==='<='){op=two;at=i;break;}
+    if(ch==='='||ch==='>'||ch==='<'){op=ch;at=i;break;}
+  }
+  if(op===null){var v=evalArg(x,lits);return v===1||v==='TRUE'||(typeof v==='number'&&v!==0);}
+  var a=evalArg(x.slice(0,at),lits),b=evalArg(x.slice(at+op.length),lits);
+  if(typeof a==='string'&&a.charAt(0)==='#')return a;
+  if(typeof b==='string'&&b.charAt(0)==='#')return b;
+  var na=typeof a==='number',nb=typeof b==='number';
+  var cmp;
+  if(na&&nb)cmp=a-b;else cmp=String(a).toUpperCase()<String(b).toUpperCase()?-1:(String(a).toUpperCase()>String(b).toUpperCase()?1:0);
+  switch(op){
+    case '=':return cmp===0;case '<>':return cmp!==0;
+    case '>':return cmp>0;case '<':return cmp<0;
+    case '>=':return cmp>=0;default:return cmp<=0;
+  }
+}
+function applyLogic(name,args,lits){
+  var i,r;
+  if(name==='IFERROR'){
+    var v0=evalArg(args[0],lits);
+    if(typeof v0==='string'&&v0.charAt(0)==='#')return args.length>1?evalArg(args[1],lits):'';
+    return v0;
+  }
+  if(name==='IF'){
+    if(args.length<2)return '#VALUE!';
+    r=evalBool(args[0],lits);
+    if(typeof r==='string')return r;
+    if(r)return evalArg(args[1],lits);
+    return args.length>2?evalArg(args[2],lits):'FALSE';
+  }
+  if(name==='NOT'){r=evalBool(args[0],lits);return (typeof r==='string')?r:(r?'FALSE':'TRUE');}
+  var all=(name==='AND');
+  for(i=0;i<args.length;i++){
+    r=evalBool(args[i],lits);
+    if(typeof r==='string')return r;
+    if(name==='AND'&&!r)all=false;
+    if(name==='OR'&&r)return 'TRUE';
+  }
+  return name==='AND'?(all?'TRUE':'FALSE'):'FALSE';
+}
+function evalFormula(expr){
+  var lits=[];
+  var pre=String(expr).replace(/"([^"]*)"/g,function(m,g){lits.push(g);return '\u0001'+(lits.length-1)+'\u0001';});
+  var e=pre.toUpperCase().replace(/\s+/g,'');
+  if(e==='')return '#ERROR!';
+  var lg=0,f;
+  while((f=findLogic(e))){
+    if(++lg>40)return '#ERROR!';
+    var res=applyLogic(f.name,splitTop(f.args),lits);
+    if(typeof res==='string'&&res.charAt(0)==='#')return res;
+    if(typeof res==='number'){e=e.slice(0,f.start)+'('+res+')'+e.slice(f.end);}
+    else{
+      if(f.start===0&&f.end===e.length)return res;
+      lits.push(res);e=e.slice(0,f.start)+'\u0001'+(lits.length-1)+'\u0001'+e.slice(f.end);
+    }
+  }
+  var lone=litOf(e,lits);
+  if(lone!==null)return lone;
+  if(hasTopCompare(e)){
+    var bres=evalBool(e,lits);
+    if(typeof bres==='string')return bres;
+    return bres?'TRUE':'FALSE';
+  }
+  if(splitAmp(e).length>1)return evalArg(e,lits);
+  return evalCore(e,lits);
+}
+function fmtNum(n){
+  if(Math.abs(n-Math.round(n))<1e-9)return String(Math.round(n));
+  return String(Math.round(n*1e6)/1e6);
+}
+function evalCore(e,lits){
+  lits=lits||[];
+  if(e==='')return '#ERROR!';
+  var l0=litOf(e,lits);
+  if(l0!==null)return l0;
+  var guard=0;
+  while(/[A-Z][A-Z.]*\(/.test(e)){
+    if(++guard>30)return '#ERROR!';
+    var m=/([A-Z]+(?:\.[A-Z]+)?)\(([^()]*)\)/.exec(e);
+    if(!m)return '#NAME?';
+    var fn=m[1],parts=m[2].split(','),args=[],argsV=[],bad=false;
+    for(var i=0;i<parts.length;i++){
+      var p=parts[i];if(p==='')continue;
+      if(p.indexOf(':')>-1){
+        var ab=p.split(':'),rr=rangeRefs(ab[0].replace(/\$/g,''),ab[1].replace(/\$/g,''));
+        if(!rr){bad=true;break;}
+        var vs=[],vv=[];
+        for(var j=0;j<rr.length;j++){var n=numOf(rr[j]);if(n!==null)vs.push(n);else if(fn==='COUNTA'&&raw(rr[j])!=='')vs.push(1);vv.push(val(rr[j]));}
+        var pa=parseRef(ab[0].replace(/\$/g,'')),pb=parseRef(ab[1].replace(/\$/g,''));
+        vv.rows=Math.abs(pb.r-pa.r)+1;vv.cols=Math.abs(pb.c-pa.c)+1;
+        args.push(vs);argsV.push(vv);
+      }else if(parseRef(p)){
+        var pk=p.replace(/\$/g,''),n2=numOf(pk);args.push(n2===null?[]:[n2]);argsV.push([val(pk)]);
+      }else if(isFinite(parseFloat(p))){args.push([parseFloat(p)]);argsV.push([parseFloat(p)]);}
+      else if(litOf(p,lits)!==null){args.push([]);argsV.push([litOf(p,lits)]);}
+      else{
+        var sub=evalCore(p,lits);
+        if(typeof sub==='number'){args.push([sub]);argsV.push([sub]);}
+        else if(typeof sub==='string'&&sub.charAt(0)!=='#'){args.push([]);argsV.push([sub]);}
+        else{bad=true;break;}
+      }
+    }
+    if(bad)return '#REF!';
+    var v=applyFn(fn,args,argsV);
+    if(typeof v==='string'){
+      if(v.charAt(0)==='#')return v;
+      if(m[0].length===e.length)return v;
+      lits.push(v);
+      e=e.slice(0,m.index)+'\u0001'+(lits.length-1)+'\u0001'+e.slice(m.index+m[0].length);
+      continue;
+    }
+    e=e.slice(0,m.index)+'('+v+')'+e.slice(m.index+m[0].length);
+  }
+  e=e.replace(/\$/g,'');
+  var refErr=false;
+  e=e.replace(/[A-F]\d+/g,function(t){
+    var n=numOf(t);
+    if(n===null){if(raw(t)!=='' ){refErr=true;return '0';}return '0';}
+    return '('+n+')';
+  });
+  if(refErr)return '#VALUE!';
+  e=e.replace(/(\([\d.]+\)|[\d.]+)%/g,'($1/100)');
+  if(!/^[0-9+\-*/().^]+$/.test(e))return '#NAME?';
+  e=e.replace(/\^/g,'**');
+  if(/\/\s*0(?![\d.])/.test(e))return '#DIV/0!';
+  var out;
+  try{out=Function('"use strict";return ('+e+')')();}catch(err){return '#ERROR!';}
+  if(typeof out!=='number'||!isFinite(out))return '#DIV/0!';
+  return Math.round(out*1e6)/1e6;
+}
+function flat(args){var o=[];for(var i=0;i<args.length;i++)o=o.concat(args[i]);return o;}
+function mean(a){return a.length?a.reduce(function(x,y){return x+y;},0)/a.length:null;}
+function pctile(a,p){
+  if(!a.length)return '#NUM!';
+  var s=a.slice().sort(function(x,y){return x-y;});
+  if(s.length===1)return s[0];
+  var pos=p*(s.length-1),lo=Math.floor(pos),hi=Math.ceil(pos);
+  if(lo===hi)return s[lo];
+  return s[lo]+(pos-lo)*(s[hi]-s[lo]);
+}
+function applyFn(fn,args,argsV){
+  argsV=argsV||args;
+  if(fn==='XLOOKUP'||fn==='VLOOKUP'||fn==='COUNTIF'||fn==='SUMIF'||fn==='AVERAGEIF'||fn==='COUNTIFS'||fn==='SUMIFS'){
+    var same=function(a,b){
+      if(typeof a==='number'&&typeof b==='number')return Math.abs(a-b)<1e-9;
+      return String(a).trim().toUpperCase()===String(b).trim().toUpperCase();
+    };
+    if(fn==='XLOOKUP'){
+      if(argsV.length<3)return '#N/A';
+      var needle=argsV[0][0],hay=argsV[1],back=argsV[2];
+      if(hay.length!==back.length)return '#VALUE!';
+      for(var i=0;i<hay.length;i++)if(same(hay[i],needle))return back[i];
+      return argsV.length>3?argsV[3][0]:'#N/A';
+    }
+    if(fn==='VLOOKUP'){
+      if(argsV.length<3)return '#N/A';
+      var nd=argsV[0][0],tb=argsV[1],ci=argsV[2][0],nr=tb.rows||tb.length;
+      if(!ci||ci<1||ci>(tb.cols||1))return '#REF!';
+      for(var t=0;t<nr;t++)if(same(tb[t],nd))return tb[(ci-1)*nr+t];
+      return '#N/A';
+    }
+    var rng=argsV[0],crit=argsV[1]?argsV[1][0]:null,hits=[];
+    for(var q=0;q<rng.length;q++)if(same(rng[q],crit))hits.push(q);
+    if(fn==='COUNTIF')return hits.length;
+    var src=argsV[2]||argsV[0],tot=0,cnt=0;
+    for(var h=0;h<hits.length;h++){var vx=src[hits[h]];if(typeof vx==='number'){tot+=vx;cnt++;}}
+    if(fn==='SUMIF')return tot;
+    return cnt?tot/cnt:'#DIV/0!';
+  }
+  var TXT={TRIM:1,LEN:1,LEFT:1,RIGHT:1,MID:1,UPPER:1,LOWER:1,PROPER:1,YEAR:1,MONTH:1,DAY:1,CORREL:1};
+  if(TXT[fn]){
+    var raw0=argsV[0]&&argsV[0].length?argsV[0][0]:'';
+    var t=String(raw0);
+    var n1=argsV[1]&&argsV[1].length?Number(argsV[1][0]):null;
+    var n2=argsV[2]&&argsV[2].length?Number(argsV[2][0]):null;
+    if(fn==='TRIM')return t.replace(/\s+/g,' ').replace(/^ | $/g,'');
+    if(fn==='LEN')return t.length;
+    if(fn==='LEFT')return t.slice(0,n1===null?1:n1);
+    if(fn==='RIGHT')return n1===null?t.slice(-1):(n1<=0?'':t.slice(-n1));
+    if(fn==='MID')return t.substr((n1||1)-1,n2===null?0:n2);
+    if(fn==='UPPER')return t.toUpperCase();
+    if(fn==='LOWER')return t.toLowerCase();
+    if(fn==='PROPER')return t.toLowerCase().replace(/(^|\s)([a-z])/g,function(a,b,c){return b+c.toUpperCase();});
+    if(fn==='CORREL'){
+      var xs=args[0]||[],ys=args[1]||[];
+      if(xs.length!==ys.length||xs.length<2)return '#N/A';
+      var mx=mean(xs),my=mean(ys),sxy=0,sxx=0,syy=0;
+      for(var q=0;q<xs.length;q++){var dx=xs[q]-mx,dy=ys[q]-my;sxy+=dx*dy;sxx+=dx*dx;syy+=dy*dy;}
+      if(sxx===0||syy===0)return '#DIV/0!';
+      return Math.round((sxy/Math.sqrt(sxx*syy))*1e6)/1e6;
+    }
+    var dm=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(t);
+    if(!dm)return '#VALUE!';
+    if(fn==='DAY')return +dm[1];
+    if(fn==='MONTH')return +dm[2];
+    return +dm[3];
+  }
+  var PARAMD={'QUARTILE':1,'QUARTILE.INC':1,'PERCENTILE':1,'PERCENTILE.INC':1,'LARGE':1,'SMALL':1};
+  var data,k=null;
+  if(PARAMD[fn]&&args.length>=2){data=args[0];k=args[args.length-1][0];}
+  else data=flat(args);
+  var n=data.length,sum=data.reduce(function(x,y){return x+y;},0);
+  switch(fn){
+    case 'SUM':return sum;
+    case 'AVERAGE':return n?sum/n:'#DIV/0!';
+    case 'COUNT':case 'COUNTA':return n;
+    case 'MIN':return n?Math.min.apply(null,data):0;
+    case 'MAX':return n?Math.max.apply(null,data):0;
+    case 'MEDIAN':return n?pctile(data,0.5):'#NUM!';
+    case 'MODE':case 'MODE.SNGL':{
+      if(!n)return '#N/A';
+      var c={},best=null,bc=1;
+      for(var i=0;i<n;i++){c[data[i]]=(c[data[i]]||0)+1;if(c[data[i]]>bc){bc=c[data[i]];best=data[i];}}
+      return best===null?'#N/A':best;
+    }
+    case 'VAR':case 'VAR.S':case 'STDEV':case 'STDEV.S':case 'VAR.P':case 'STDEV.P':{
+      if(n<2&&fn.indexOf('.P')===-1)return '#DIV/0!';
+      if(!n)return '#DIV/0!';
+      var mu=mean(data),ss=0;
+      for(var j=0;j<n;j++)ss+=(data[j]-mu)*(data[j]-mu);
+      var pop=fn.indexOf('.P')>-1,vv=ss/(pop?n:n-1);
+      return fn.indexOf('STDEV')===0?Math.sqrt(vv):vv;
+    }
+    case 'QUARTILE':case 'QUARTILE.INC':return (k===null||k<0||k>4)?'#NUM!':pctile(data,k/4);
+    case 'PERCENTILE':case 'PERCENTILE.INC':return (k===null||k<0||k>1)?'#NUM!':pctile(data,k);
+    case 'LARGE':{var s1=data.slice().sort(function(x,y){return y-x;});return (k>=1&&k<=n)?s1[k-1]:'#NUM!';}
+    case 'SMALL':{var s2=data.slice().sort(function(x,y){return x-y;});return (k>=1&&k<=n)?s2[k-1]:'#NUM!';}
+    case 'ABS':return n?Math.abs(data[0]):'#VALUE!';
+    case 'SQRT':return n?(data[0]<0?'#NUM!':Math.sqrt(data[0])):'#VALUE!';
+    case 'ROUND':{if(args.length<2)return '#VALUE!';var d=args[args.length-1][0],p=Math.pow(10,d);return Math.round(args[0][0]*p)/p;}
+    default:return '#NAME?';
+  }
+}
+function shiftFormula(f,dc,dr){
+  return f.replace(/(\$?)([A-F])(\$?)(\d+)/gi,function(all,d1,cl,d2,rw){
+    var c=COLS.indexOf(cl.toUpperCase()),r=parseInt(rw,10)-1;
+    if(!d1)c+=dc;
+    if(!d2)r+=dr;
+    if(c<0||c>=COLS.length||r<0)return '#REF!';
+    return d1+COLS[c]+d2+(r+1);
+  });
+}
+function display(k){
+  var v=val(k);
+  if(v==='')return {t:'',cls:''};
+  if(typeof v==='string'&&v.charAt(0)==='#')return {t:v,cls:'err'};
+  if(typeof v==='number'){
+    var w=S.widths[k.charAt(0)]||110;
+    var s=fmt(k,v);
+    if(s.length*7.6>w-14)return {t:'#####',cls:'over'};
+    return {t:s,cls:'num'};
+  }
+  return {t:v,cls:'txt'};
+}
+function fmt(k,v){
+  var f=(S.cells[k]&&S.cells[k].f)||'';
+  if(f==='aud')return '$'+v.toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(f==='pct')return (Math.round(v*10000)/100)+'%';
+  if(f==='num')return v.toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(Math.abs(v-Math.round(v))<1e-9)return String(Math.round(v));
+  return String(Math.round(v*100)/100);
+}
+
+/* ---------------- rendering ---------------- */
+var gridEl=document.getElementById('grid');
+function inSel(c,r){
+  var a=parseRef(sel.a),b=parseRef(sel.b);
+  return c>=Math.min(a.c,b.c)&&c<=Math.max(a.c,b.c)&&r>=Math.min(a.r,b.r)&&r<=Math.max(a.r,b.r);
+}
+function render(){
+  var h='<table class="sheet"><colgroup><col style="width:34px">';
+  for(var c=0;c<S.cols;c++)h+='<col style="width:'+(S.widths[COLS[c]]||110)+'px">';
+  h+='</colgroup><tr><th class="hdr corner"></th>';
+  for(c=0;c<S.cols;c++)h+='<th class="hdr'+(inSelCol(c)?' on':'')+'" data-col="'+c+'">'+COLS[c]+'<span class="grip" data-grip="'+c+'"></span></th>';
+  h+='</tr>';
+  for(var r=0;r<S.rows;r++){
+    if(S.hidden[r])continue;
+    h+='<tr><th class="hdr rowhdr'+(inSelRow(r)?' on':'')+'">'+(r+1)+'</th>';
+    for(c=0;c<S.cols;c++){
+      var k=ref(c,r),d=display(k),is=(k===sel.a&&k===sel.b)||(k===sel.b),rng=inSel(c,r);
+      var cls='cell '+d.cls+(rng?' inrange':'')+(k===sel.b?' sel':'');
+      var handle=(k===sel.b)?'<span class="handle" data-h="1"></span>':'';
+      var bgc=(S.cells[k]&&S.cells[k].bg)?' style="background:'+S.cells[k].bg+'"':'';
+      h+='<td class="'+cls+'" data-k="'+k+'"'+bgc+'>'+esc(d.t)+handle+'</td>';
+    }
+    h+='</tr>';
+  }
+  gridEl.innerHTML=h+'</table>';
+  chrome();
+  status();
+}
+function inSelCol(c){var a=parseRef(sel.a),b=parseRef(sel.b);return c>=Math.min(a.c,b.c)&&c<=Math.max(a.c,b.c);}
+function inSelRow(r){var a=parseRef(sel.a),b=parseRef(sel.b);return r>=Math.min(a.r,b.r)&&r<=Math.max(a.r,b.r);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function chrome(){
+  var nb=document.getElementById('namebox'),fb=document.getElementById('fbar');
+  nb.textContent=(sel.a===sel.b)?sel.b:(sel.a+':'+sel.b);
+  var r=raw(sel.b);
+  fb.textContent=r===''?'empty':r;
+  fb.className='fbar'+(r===''?' empty':'');
+}
+function status(){
+  var rr=rangeRefs(sel.a,sel.b)||[sel.b];
+  if(!document.getElementById('st-sel')){var dz=document.getElementById('dgst');if(dz)dz.textContent='Selected: '+(sel.a===sel.b?sel.b:sel.a+':'+sel.b);return;}
+  document.getElementById('st-sel').textContent='Selected: '+(sel.a===sel.b?sel.b:sel.a+':'+sel.b);
+  var nums=[],i;
+  for(i=0;i<rr.length;i++){var n=numOf(rr[i]);if(n!==null)nums.push(n);}
+  document.getElementById('st-count').textContent=rr.length>1?('Count: '+rr.length):'';
+  document.getElementById('st-sum').textContent=(rr.length>1&&nums.length)?('Sum: '+nums.reduce(function(a,b){return a+b;},0).toLocaleString('en-AU')):'';
+}
+
+/* ---------------- interaction ---------------- */
+var mouse={mode:null,startCol:0,startW:0,grip:-1};
+function snapshot(){S.undoStack.push(JSON.stringify({c:S.cells,w:S.widths}));if(S.undoStack.length>40)S.undoStack.shift();}
+
+document.addEventListener('mousedown',function(e){
+  var g=e.target.closest?e.target.closest('.grip'):null;
+  if(g){mouse.mode='resize';mouse.grip=+g.getAttribute('data-grip');mouse.startX=e.clientX;mouse.startW=S.widths[COLS[mouse.grip]]||110;snapshot();e.preventDefault();return;}
+  if(e.target.classList.contains('handle')){mouse.mode='fill';mouse.fillFrom=sel.b;e.preventDefault();return;}
+  var td=e.target.closest?e.target.closest('td.cell'):null;
+  if(!td)return;
+  if(editing){
+    var einp=gridEl.querySelector('td[data-k="'+editing+'"] input');
+    if(einp){
+      if(e.target===einp)return;
+      if(pointable(einp)){
+        mouse.mode='point';mouse.pointInp=einp;
+        mouse.pointAt=(einp.selectionStart===null||einp.selectionStart===undefined)?einp.value.length:einp.selectionStart;
+        mouse.pointTail=einp.value.slice(mouse.pointAt);
+        mouse.pointAnchor=td.getAttribute('data-k');
+        putRef(einp,mouse.pointAt,mouse.pointTail,mouse.pointAnchor,null);
+        e.preventDefault();return;
+      }
+    }
+  }
+  commitEdit();
+  sel.a=sel.b=td.getAttribute('data-k');mouse.mode='select';render();e.preventDefault();
+});
+function pointable(inp){
+  var v=inp.value;
+  if(v.charAt(0)!=='=')return false;
+  var at=(inp.selectionStart===null||inp.selectionStart===undefined)?v.length:inp.selectionStart;
+  return /[=+\-*/(,:^&<>]\s*$/.test(v.slice(0,at));
+}
+function putRef(inp,at,tail,a,b){
+  var txt=a+(b&&b!==a?':'+b:'');
+  inp.value=inp.value.slice(0,at)+txt+tail;
+  var pos=at+txt.length;
+  try{inp.setSelectionRange(pos,pos);}catch(err){}
+  var fb=document.getElementById('fbar');if(fb){fb.textContent=inp.value;fb.className='fbar';}
+}
+document.addEventListener('mousemove',function(e){
+  if(!mouse.mode)return;
+  if(mouse.mode==='resize'){
+    var w=Math.max(34,Math.min(300,mouse.startW+(e.clientX-mouse.startX)));
+    S.widths[COLS[mouse.grip]]=w;S.resized[COLS[mouse.grip]]=true;render();return;
+  }
+  var el=document.elementFromPoint(e.clientX,e.clientY);
+  var td=el&&el.closest?el.closest('td.cell'):null;
+  if(!td)return;
+  var k=td.getAttribute('data-k');
+  if(mouse.mode==='point'){putRef(mouse.pointInp,mouse.pointAt,mouse.pointTail,mouse.pointAnchor,k);return;}
+  if(mouse.mode==='select'&&k!==sel.b){sel.b=k;render();}
+  if(mouse.mode==='fill'&&k!==sel.b){sel.b=k;render();}
+});
+document.addEventListener('mouseup',function(){
+  if(mouse.mode==='point'){mouse.mode=null;try{mouse.pointInp.focus();}catch(e){}return;}
+  if(mouse.mode==='fill'){doFill();}
+  if(mouse.mode)check();
+  mouse.mode=null;
+});
+document.addEventListener('dblclick',function(e){
+  var td=e.target.closest?e.target.closest('td.cell'):null;
+  if(td)startEdit(td.getAttribute('data-k'),raw(td.getAttribute('data-k')));
+});
+function doFill(){
+  var from=mouse.fillFrom,p=parseRef(from),q=parseRef(sel.b);
+  if(!p||!q||from===sel.b)return;
+  var src=raw(from);if(src==='')return;
+  snapshot();
+  var rr=rangeRefs(from,sel.b),n=0;
+  for(var i=0;i<rr.length;i++){
+    if(rr[i]===from)continue;
+    var t=parseRef(rr[i]);
+    setRaw(rr[i],src.charAt(0)==='='?shiftFormula(src,t.c-p.c,t.r-p.r):src);
+    if(S.cells[from]&&S.cells[from].f)S.cells[rr[i]].f=S.cells[from].f;
+    n++;
+  }
+  filledByDrag+=n;sel.a=from;render();
+}
+function startEdit(k,initial){
+  editing=k;sel.a=sel.b=k;render();
+  var td=gridEl.querySelector('td[data-k="'+k+'"]');
+  if(!td)return;
+  td.innerHTML='<input type="text">';
+  var inp=td.querySelector('input');
+  inp.value=initial||'';inp.focus();
+  if(initial)inp.setSelectionRange(initial.length,initial.length);
+  inp.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){e.preventDefault();commitEdit();moveSel(0,1);check();}
+    else if(e.key==='Escape'){editing=null;render();}
+    else if(e.key==='Tab'){e.preventDefault();commitEdit();moveSel(1,0);check();}
+    e.stopPropagation();
+  });
+  inp.addEventListener('input',function(){document.getElementById('fbar').textContent=inp.value||'empty';});
+}
+function commitEdit(){
+  if(!editing)return;
+  var inp=gridEl.querySelector('td[data-k="'+editing+'"] input');
+  if(inp){
+    var nv=inp.value.trim();
+    if(S.valid&&editing.charAt(0)===S.valid.col&&nv!==''){
+      var okv=false;
+      for(var q=0;q<S.valid.list.length;q++)if(S.valid.list[q].toUpperCase()===nv.toUpperCase())okv=true;
+      if(!okv){S.rejected++;editing=null;render();
+        var fbx=document.getElementById('fb');
+        if(fbx){fbx.className='fb show no';fbx.textContent='Excel rejected that. Column '+S.valid.col+' only accepts: '+S.valid.list.join(', ')+'. That is what a drop-down list does \u2014 it stops the wrong value getting in at all.';}
+        return;}
+    }
+    snapshot();setRaw(editing,nv);
+  }
+  editing=null;render();
+}
+function moveSel(dc,dr){
+  var p=parseRef(sel.b);if(!p)return;
+  var c=Math.max(0,Math.min(S.cols-1,p.c+dc)),r=Math.max(0,Math.min(S.rows-1,p.r+dr));
+  sel.a=sel.b=ref(c,r);render();
+}
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('lesson').classList.contains('hide')&&document.getElementById('diag').classList.contains('hide'))return;
+  if(editing)return;
+  if(e.target.tagName==='INPUT')return;
+  var k=e.key;
+  if(k==='ArrowUp'){moveSel(0,-1);e.preventDefault();}
+  else if(k==='ArrowDown'){moveSel(0,1);e.preventDefault();}
+  else if(k==='ArrowLeft'){moveSel(-1,0);e.preventDefault();}
+  else if(k==='ArrowRight'){moveSel(1,0);e.preventDefault();}
+  else if(k==='Enter'||k==='F2'){startEdit(sel.b,raw(sel.b));e.preventDefault();}
+  else if(k==='Delete'||k==='Backspace'){
+    snapshot();var rr=rangeRefs(sel.a,sel.b)||[sel.b];
+    for(var i=0;i<rr.length;i++)setRaw(rr[i],'');
+    render();check();e.preventDefault();
+  }
+  else if((e.ctrlKey||e.metaKey)&&k.toLowerCase()==='z'){doUndo();e.preventDefault();}
+  else if((e.ctrlKey||e.metaKey)&&k.toLowerCase()==='c'){kbCopy(false);e.preventDefault();}
+  else if((e.ctrlKey||e.metaKey)&&k.toLowerCase()==='x'){kbCopy(true);e.preventDefault();}
+  else if((e.ctrlKey||e.metaKey)&&k.toLowerCase()==='v'){kbPaste();e.preventDefault();}
+  else if(k.length===1&&!e.ctrlKey&&!e.metaKey){startEdit(sel.b,k);e.preventDefault();}
+});
+var KB=null;
+function flashNote(msg,kind){
+  var fbx=document.getElementById('fb');
+  if(!fbx)return;
+  fbx.className='fb show '+(kind||'no');fbx.textContent=msg;
+}
+function kbCopy(cut){
+  var rr=rangeRefs(sel.a,sel.b)||[sel.b];
+  var p0=parseRef(rr[0]),cells=[];
+  for(var i=0;i<rr.length;i++){
+    var pr=parseRef(rr[i]);
+    cells.push({dc:pr.c-p0.c,dr:pr.r-p0.r,v:raw(rr[i]),f:(S.cells[rr[i]]&&S.cells[rr[i]].f)||'',bg:(S.cells[rr[i]]&&S.cells[rr[i]].bg)||''});
+  }
+  KB={cells:cells,cut:!!cut,origin:rr[0]};
+  if(cut){snapshot();for(var j=0;j<rr.length;j++)setRaw(rr[j],'');render();}
+  flashNote((cut?'Cut ':'Copied ')+(rr.length>1?(rr.length+' cells'):sel.b)+'. Click where you want it and press Ctrl+V.','no');
+}
+function kbPaste(){
+  if(!KB){flashNote('Nothing copied yet. Select a cell and press Ctrl+C first.','no');return;}
+  snapshot();
+  var p=parseRef(sel.b),o=parseRef(KB.origin);
+  for(var i=0;i<KB.cells.length;i++){
+    var c=KB.cells[i],tc=p.c+c.dc,tr=p.r+c.dr;
+    if(tc<0||tc>=S.cols||tr<0||tr>=S.rows)continue;
+    var k=ref(tc,tr),v=c.v;
+    if(v.charAt(0)==='='&&!KB.cut)v=shiftFormula(v,p.c-o.c,p.r-o.r);
+    setRaw(k,v);
+    if(S.cells[k]){if(c.f)S.cells[k].f=c.f;if(c.bg)S.cells[k].bg=c.bg;}
+  }
+  if(KB.cut)KB=null;
+  render();check();
+}
+function doUndo(){
+  if(!S.undoStack.length)return;
+  var s=JSON.parse(S.undoStack.pop());
+  S.cells=s.c;S.widths=s.w;S.undoCount++;render();check();
+}
+document.getElementById('undo').addEventListener('click',doUndo);
+
+/* ---------------- lessons ---------------- */
+function grid(rows,cols,cells,widths){
+  S.cells={};S.widths={};S.rows=rows;S.cols=cols;S.undoStack=[];S.undoCount=0;S.resized={};S.hidden={};S.valid=null;S.rejected=0;
+  for(var k in cells)S.cells[k]=(typeof cells[k]==='object')?cells[k]:{v:String(cells[k])};
+  for(var w in (widths||{}))S.widths[w]=widths[w];
+}
+var LESSONS=[
+{
+ title:'Meet the cell',
+ sub:'letters, numbers, addresses',
+ task:'Click cell B3.',
+ teach:'A spreadsheet is a grid of boxes. Each box is a <b>cell</b>. The letters along the top name the <b>columns</b>; the numbers down the side name the <b>rows</b>. Every cell has an address made of its letter and its number — the box where column B meets row 3 is called <b>B3</b>. Watch the small box on the far left of the bar at the top of this page: it always tells you which cell you are on.',
+ hint:'Count three across the top to B, then three down the side to row 3. Click where they meet.',
+ setup:function(){grid(6,5,{});sel.a=sel.b='A1';},
+ check:function(){
+   if(sel.b==='B3')return[1,'That is B3 — column B, row 3. The box at the top of the page now says B3 too. That box is called the Name Box, and in real Excel it sits in exactly the same place.'];
+   if(sel.b==='A1')return[0,''];
+   return[0,'You are on '+sel.b+'. Close. Column letter first, then row number — you want B3.'];
+ }
+},
+{
+ title:'Type something in',
+ sub:'clicking is not enough',
+ task:'Click A1, type your first name, then press Enter.',
+ teach:'Clicking a cell only selects it. To put something in, you select it and start typing — the typing goes straight in, you do not need to double-click first. Press <b>Enter</b> when you are done and Excel saves it and drops you down one cell. That drop is deliberate: it is built for going down a list.',
+ hint:'Click A1 once. Then just start typing letters. Then press Enter.',
+ setup:function(){grid(6,5,{});sel.a=sel.b='A1';},
+ check:function(){
+   var v=raw('A1');
+   if(v&&isFinite(v))return[0,'That went in, but it is a number. Type some letters this time — your name.'];
+   if(v&&v.length>=2)return[1,'In it goes. Notice the selection dropped to A2 by itself when you pressed Enter, and the long bar at the top now shows what A1 holds.'];
+   return[0,''];
+ }
+},
+{
+ title:'Fix what is already there',
+ sub:'typing replaces, it does not add',
+ task:'B2 says Melborne. Correct it to Melbourne.',
+ teach:'This one surprises people. If a cell already has something in it and you select it and start typing, the new text <b>wipes out</b> the old — it does not add to the end. If you only want to change part of it, press <b>F2</b> first, or double-click the cell, and you get a cursor inside instead.',
+ hint:'Select B2 and type the whole word again, or double-click it to get a cursor and fix the one letter.',
+ setup:function(){grid(6,5,{B1:'City',B2:'Melborne',C1:'State',C2:'VIC'});sel.a=sel.b='A1';S.widths={B:120};},
+ check:function(){
+   var v=raw('B2');
+   if(v==='Melbourne')return[1,'Fixed. Either way works — retyping the lot, or double-clicking to edit inside the cell. On a long sentence the second way saves you a lot of typing.'];
+   if(v==='Melborne')return[0,''];
+   if(v==='')return[0,'You have emptied it. Type the corrected city name in.'];
+   return[0,'Not quite that. The city is spelt Melbourne.'];
+ }
+},
+{
+ title:'Undo',
+ sub:'the most important key in Excel',
+ task:'Select B2, press Delete to wipe it, then undo it with Ctrl+Z.',
+ teach:'You will delete the wrong thing. Everybody does. <b>Ctrl+Z</b> (or Cmd+Z on a Mac) steps backwards through everything you have done, and you can press it over and over. Knowing this is what lets you experiment without being frightened of the file.',
+ hint:'Click B2, press the Delete key, then hold Ctrl and press Z. There is also an Undo button below the grid.',
+ setup:function(){grid(6,5,{B1:'City',B2:'Melbourne',C1:'State',C2:'VIC'});sel.a=sel.b='A1';S.widths={B:120};},
+ check:function(){
+   if(S.undoCount>0&&raw('B2')==='Melbourne')return[1,'Gone and back again. Nothing you do in a spreadsheet is permanent until you close it, so poke at things.'];
+   if(raw('B2')==='')return[0,'Deleted. Now bring it back — hold Ctrl and press Z.'];
+   return[0,''];
+ }
+},
+{
+ title:'Select a range',
+ sub:'hold and drag, do not click each one',
+ task:'Select all five shift lengths at once — from B2 down to B6.',
+ teach:'A <b>range</b> is a block of cells treated as one thing. You make one by pressing the mouse down on the first cell, holding, dragging to the last, and letting go. Excel writes it as <b>B2:B6</b>, said out loud as "B2 through B6". Look at the strip under the grid while you do it — it counts them and adds them up without you asking.',
+ hint:'Press down on B2, keep the button held, move to B6, then release.',
+ setup:function(){grid(8,5,{A1:'Day',B1:'Hours',A2:'Mon',B2:'6',A3:'Tue',B3:'4',A4:'Wed',B4:'8',A5:'Thu',B5:'5',A6:'Fri',B6:'7'});sel.a=sel.b='A1';},
+ check:function(){
+   var a=sel.a,b=sel.b,lo=a<b?a:b,hi=a<b?b:a;
+   if(lo==='B2'&&hi==='B6')return[1,'That is the range B2:B6. The strip below already told you there are 5 of them and they add to 30 hours — that running total is free, and most people never notice it exists.'];
+   if(a!==b)return[0,'You have selected '+lo+':'+hi+'. Try again from B2 to B6.'];
+   return[0,''];
+ }
+},
+{
+ title:'The wall of hashes',
+ sub:'##### is not an error',
+ task:'Widen column B until you can read the number in B2.',
+ teach:'When a number is too wide for its column, Excel refuses to show you half a number, so it shows <b>#####</b> instead. Nothing is broken and nothing is lost. Put your cursor on the line between the B and the C at the top of the grid — it turns into a double arrow — then hold and drag right.',
+ hint:'Aim for the thin border between the B header and the C header. Hold the mouse down there and drag sideways.',
+ setup:function(){grid(6,5,{A1:'Item',B1:'Amount',A2:'Semester tuition',B2:{v:'48250.75',f:'aud'},A3:'Textbooks',B3:{v:'420',f:'aud'}});S.widths={A:130,B:52};sel.a=sel.b='A1';},
+ check:function(){
+   if((S.widths.B||110)>=105)return[1,'There it is — $48,250.75, sitting there the whole time. The hashes only ever mean the column is too narrow. Double-clicking that same border snaps the column to fit automatically.'];
+   if(S.resized.B)return[0,'Getting wider. Keep going until the number appears.'];
+   return[0,''];
+ }
+},
+{
+ title:'Your first formula',
+ sub:'the equals sign changes everything',
+ task:'In B4, add the two amounts together using a formula.',
+ teach:'Type an <b>equals sign</b> first and the cell stops being a note and starts being a calculation. <b>=B2+B3</b> means "whatever is in B2, plus whatever is in B3". Use the cell addresses, not the numbers themselves — that is the whole difference between a spreadsheet and a calculator, and the next lesson shows you why.',
+ hint:'Click B4. Type = then B2 then + then B3, then press Enter.',
+ setup:function(){grid(7,5,{A1:'Item',B1:'Amount',A2:'Coffee sales',B2:'340',A3:'Food sales',B3:'210',A4:'Total'});S.widths={A:130};sel.a=sel.b='A1';},
+ check:function(){
+   var v=raw('B4').toUpperCase().replace(/\s/g,'');
+   if(v==='')return[0,''];
+   if(v.charAt(0)!=='=')return[-1,'No equals sign, so Excel just stored that as text — look at B4, it is sitting there as words. Start with = and it calculates.'];
+   if(v==='=340+210'||v==='=210+340')return[-1,'It says 550, which is right today. But you typed the numbers in by hand. Change B2 tomorrow and B4 will still stubbornly say 550. Use =B2+B3 instead.'];
+   if(val('B4')===550)return[1,'Done. B4 shows 550, but look at the bar at the top of the page — the cell is actually holding a formula. Change B2 to 400 and watch the total fix itself.'];
+   return[0,'That is not landing on 550. Check the cell addresses — the two numbers live in B2 and B3.'];
+ }
+},
+{
+ title:'SUM a range',
+ sub:'for when there are more than two',
+ task:'In B8, total all six weeks using SUM.',
+ teach:'=B2+B3+B4+B5+B6+B7 works, and it is horrible. <b>=SUM(B2:B7)</b> means the same thing and reads in one glance. SUM takes a range — a start cell, a colon, an end cell. This is the single most-used formula in the world and it is worth typing until your fingers know it.',
+ hint:'Click B8 and type =SUM(B2:B7) then Enter. The bracket and the colon both matter.',
+ setup:function(){grid(9,5,{A1:'Week',B1:'Sales',A2:'Week 1',B2:'1240',A3:'Week 2',B3:'980',A4:'Week 3',B4:'1610',A5:'Week 4',B5:'1105',A6:'Week 5',B6:'1370',A7:'Week 6',B7:'890',A8:'Total'});S.widths={A:110};sel.a=sel.b='A1';},
+ check:function(){
+   var v=raw('B8').toUpperCase().replace(/\s/g,'');
+   if(v==='')return[0,''];
+   if(v.indexOf('SUM')===-1&&val('B8')===7195)return[-1,'Right answer, long way round. Now do it as =SUM(B2:B7) — one range instead of six additions.'];
+   if(val('B8')===7195)return[1,'7195. If a seventh week gets added inside that range, the total follows along on its own. That is why ranges beat adding cells one by one.'];
+   if(String(val('B8')).charAt(0)==='#')return[0,'Excel is showing an error. Check the brackets and the colon: =SUM(B2:B7)'];
+   return[0,'Not 7195 yet. Make sure the range covers B2 down to B7.'];
+ }
+},
+{
+ title:'The little square',
+ sub:'stop typing the same formula',
+ task:'C2 has the pay formula. Drag its fill handle down to C6.',
+ teach:'Look at the bottom-right corner of the selected cell. There is a small square there. That is the <b>fill handle</b>, and it is the reason nobody types the same formula five times. Hold it, drag down, let go — and Excel rewrites the row numbers as it goes, so row 3 gets row 3\'s hours. Nobody ever points this square out. It might be the most useful thing on this whole page.',
+ hint:'Click C2 first. Then find the small square at its bottom-right corner, hold the mouse down on it, and drag down to C6.',
+ setup:function(){grid(8,5,{A1:'Day',B1:'Hours',C1:'Pay',A2:'Mon',B2:'6',C2:'=B2*28.5',A3:'Tue',B3:'4',A4:'Wed',B4:'8',A5:'Thu',B5:'5',A6:'Fri',B6:'7'});filledByDrag=0;sel.a=sel.b='C2';},
+ check:function(){
+   var need=['C3','C4','C5','C6'],got=0;
+   for(var i=0;i<need.length;i++)if(raw(need[i]).indexOf('=')===0)got++;
+   if(got===4&&filledByDrag>0)return[1,'Five rows from one drag. Click C4 and read the bar at the top — it says =B4*28.5, not =B2*28.5. Excel moved the row number down as you dragged. That behaviour has a name, and it is the next lesson.'];
+   if(got===4)return[1,'All four filled. Click C4 and check the bar at the top — the row number changed by itself.'];
+   if(got>0)return[0,got+' of 4 filled. Keep dragging — all the way down to C6.'];
+   return[0,''];
+ }
+},
+{
+ title:'The dollar sign that stays put',
+ sub:'relative and absolute references',
+ task:'In C2 work out the GST on the first item, then fill it down to C5.',
+ teach:'When you drag a formula, Excel shifts every address inside it. Usually that is what you want. But the GST rate lives in <b>B1</b> and must not move — if it shifts to B2, B3, B4 the sums go nonsense. Lock it by putting dollar signs in front: <b>$B$1</b>. Locked is called <b>absolute</b>; unlocked is <b>relative</b>. So C2 should be <b>=B2*$B$1</b>.',
+ hint:'In C2 type =B2*$B$1 and press Enter. Then use the fill handle at the corner of C2 to drag down to C5.',
+ setup:function(){grid(7,5,{A1:'GST rate',B1:'0.1',A2:'Laptop',B2:{v:'1450',f:'aud'},A3:'Desk chair',B3:{v:'320',f:'aud'},A4:'Monitor',B4:{v:'540',f:'aud'},A5:'Keyboard',B5:{v:'95',f:'aud'},C1:'GST'});S.widths={A:110};filledByDrag=0;sel.a=sel.b='C2';},
+ check:function(){
+   var f=raw('C2').toUpperCase().replace(/\s/g,'');
+   if(f==='')return[0,''];
+   if(f.indexOf('$B$1')===-1&&f.indexOf('0.1')>-1)return[-1,'That works for C2, but you have typed the rate in by hand. If the GST rate ever changes you would have to edit every row. Point at the rate instead: =B2*$B$1'];
+   if(f.indexOf('$')===-1&&f.indexOf('B1')>-1){
+     if(raw('C3'))return[-1,'Now look at C3 — it is wrong, or zero. Without the dollar signs, B1 slid down to B2 when you dragged. Put it back as =B2*$B$1 and fill again.'];
+     return[0,'C2 is right, but B1 is not locked. Drag it down and you will see it break. Try =B2*$B$1'];
+   }
+   var ok=Math.abs(val('C2')-145)<0.01;
+   var all=ok&&Math.abs(val('C3')-32)<0.01&&Math.abs(val('C4')-54)<0.01&&Math.abs(val('C5')-9.5)<0.01;
+   if(all)return[1,'That is the whole trick. $B$1 held still while B2 walked down the column. Change the rate in B1 to 0.15 and all four numbers move at once — that is a spreadsheet doing what a calculator cannot.'];
+   if(ok)return[0,'C2 is correct. Now drag the fill handle down to C5.'];
+   return[0,'C2 is not 145 yet. It should be the laptop price multiplied by the locked rate: =B2*$B$1'];
+ }
+},
+{
+ title:'Numbers that are not quantities',
+ sub:'categorical or numerical',
+ task:'In column C, type CATEGORICAL or NUMERICAL for each of the five columns described.',
+ teach:'Before you calculate anything, you have to know what kind of thing you are holding. <b>Numerical</b> data measures an amount, and arithmetic on it means something. <b>Categorical</b> data labels a group, and arithmetic on it is nonsense. The trap is that plenty of categorical data is written using digits. A postcode is stored as 2000 but there is no such thing as an average postcode, and a student ID is a name, not a quantity. Ask yourself: would adding two of these together mean anything?',
+ hint:'Postcode and student ID look like numbers but are labels. The other three measure real amounts.',
+ setup:function(){
+   grid(9,5,{A1:'Column',B1:'Example value',C1:'Type',
+     A2:'Student ID',B2:"'3041882",
+     A3:'Weekly rent',B3:'620',
+     A4:'Postcode',B4:"'2052",
+     A5:'Hours studied',B5:'14',
+     A6:'Degree',B6:'Commerce'});
+   S.widths={A:110,B:110,C:120};sel.a=sel.b='C2';
+ },
+ check:function(){
+   var want=['CATEGORICAL','NUMERICAL','CATEGORICAL','NUMERICAL','CATEGORICAL'],ks=['C2','C3','C4','C5','C6'];
+   var got=0,wrong=[],blank=0,i;
+   for(i=0;i<5;i++){
+     var v=String(val(ks[i])).toUpperCase().trim();
+     if(v==='')  {blank++;continue;}
+     if(v===want[i]||v===want[i].charAt(0))got++;else wrong.push(ks[i]);
+   }
+   if(blank===5)return[0,''];
+   if(wrong.length&&wrong.indexOf('C2')>-1||wrong.indexOf('C4')>-1)
+     return[-1,'Check the student ID and the postcode again. Both are written with digits, which is exactly why they catch people, but neither measures an amount. An average postcode of 2043.7 would not point at anywhere.'];
+   if(wrong.length)return[0,'Not all correct yet. Ask of each one: would adding two of these together mean anything?'];
+   if(blank)return[0,got+' of 5 so far. Keep going.'];
+   return[1,'Right. Two of those five are numbers on the page and labels in reality. This is the first thing to work out about any column you are given, because it decides every single thing you are allowed to do next, from which average to use to which chart makes sense.'];
+ }
+},
+{
+ title:'Do the categories have an order?',
+ sub:'nominal and ordinal',
+ task:'In column C, type NOMINAL or ORDINAL for each one.',
+ teach:'Categorical data splits again. <b>Nominal</b> categories have no natural order: Commerce is not more or less than Engineering, they are just different. <b>Ordinal</b> categories do have an order, but the gaps between them are not measurable: a satisfaction rating of 4 is better than 3, yet nobody can say the gap between 3 and 4 equals the gap between 4 and 5. That distinction decides what you may do. For nominal data the only sensible average is the <b>mode</b>, the most common value. For ordinal data you may also take the <b>median</b>. Neither one lets you take a mean, however tempting it looks when the answers are typed as 1 to 5.',
+ hint:'Ask whether one value is genuinely higher than another. Suburb and degree have no order; size, rating and year level do.',
+ setup:function(){
+   grid(9,5,{A1:'Column',B1:'Example value',C1:'Type',
+     A2:'Suburb',B2:'Randwick',
+     A3:'T-shirt size',B3:'Large',
+     A4:'Satisfaction 1-5',B4:'4',
+     A5:'Degree',B5:'Commerce',
+     A6:'Year level',B6:'Third year'});
+   S.widths={A:120,B:110,C:110};sel.a=sel.b='C2';
+ },
+ check:function(){
+   var want=['NOMINAL','ORDINAL','ORDINAL','NOMINAL','ORDINAL'],ks=['C2','C3','C4','C5','C6'];
+   var wrong=[],blank=0,i;
+   for(i=0;i<5;i++){
+     var v=String(val(ks[i])).toUpperCase().trim();
+     if(v===''){blank++;continue;}
+     if(v!==want[i])wrong.push(ks[i]);
+   }
+   if(blank===5)return[0,''];
+   if(wrong.indexOf('C4')>-1)
+     return[-1,'The satisfaction rating is the one worth arguing about. It is typed as 1 to 5, so Excel will happily average it. But the gap between 3 and 4 is not measurably the same as the gap between 4 and 5, so it is ordinal, and a mean of 3.7 is a number nobody can properly interpret. It gets reported constantly anyway.'];
+   if(wrong.length)return[0,'Not there yet. Ask of each one whether a value can be genuinely higher than another, or whether they are just different.'];
+   if(blank)return[0,(5-blank-wrong.length)+' of 5 so far. Keep going.'];
+   return[1,'That is the split. Remember what it buys you: nominal data can only be summarised by the mode, ordinal data by the mode or the median. The moment you see a mean of a satisfaction score in a report, you now know something is off.'];
+ }
+},
+{
+ title:'Is zero really zero?',
+ sub:'interval and ratio',
+ task:'In column C, type INTERVAL or RATIO for each one.',
+ teach:'Numerical data splits too, and it turns on one question: does zero mean <b>none of it</b>? Rent of $0 means no rent, so rent is <b>ratio</b> data and $600 really is twice $300. Temperature of 0 degrees does not mean no temperature, it is just a point somebody chose, so temperature is <b>interval</b> data and 20 degrees is not twice as warm as 10. Same for a year: 2026 is not twice 1013. With interval data you can add and subtract, but multiplying and dividing produces sentences that sound fine and mean nothing.',
+ hint:'For each one, ask whether zero would mean a complete absence of the thing.',
+ setup:function(){
+   grid(9,5,{A1:'Column',B1:'Example value',C1:'Type',
+     A2:'Weekly rent',B2:'620',
+     A3:'Temperature in C',B3:'19',
+     A4:'Hours studied',B4:'14',
+     A5:'Year of birth',B5:'2004',
+     A6:'Exam mark out of 100',B6:'68'});
+   S.widths={A:150,B:100,C:100};sel.a=sel.b='C2';
+ },
+ check:function(){
+   var want=['RATIO','INTERVAL','RATIO','INTERVAL','RATIO'],ks=['C2','C3','C4','C5','C6'];
+   var wrong=[],blank=0,i;
+   for(i=0;i<5;i++){
+     var v=String(val(ks[i])).toUpperCase().trim();
+     if(v===''){blank++;continue;}
+     if(v!==want[i])wrong.push(ks[i]);
+   }
+   if(blank===5)return[0,''];
+   if(wrong.indexOf('C3')>-1||wrong.indexOf('C5')>-1)
+     return[-1,'Temperature and year of birth are the two that are not ratio. Zero degrees is not an absence of temperature, and the year zero is not an absence of time. Both were placed by convention, so subtracting them is fine and dividing them is meaningless.'];
+   if(wrong.length)return[0,'Not yet. For each one, ask whether zero would mean none of the thing at all.'];
+   if(blank)return[0,(5-blank-wrong.length)+' of 5 so far. Keep going.'];
+   return[1,'Done, and you now have the full ladder: nominal, ordinal, interval, ratio. Everything in the next part sits on top of it. A mean needs interval or ratio data. A median needs at least ordinal. A mode works for anything. Excel will calculate all three on any column you point it at, without ever asking whether it makes sense, so that judgement is entirely yours.'];
+ }
+},
+{
+ title:'Mean and median',
+ sub:'two answers to "what is typical"',
+ task:'In E2 calculate the mean rent, and in E3 the median.',
+ teach:'These are nine rooms advertised in the same suburb. The <b>mean</b> adds everything up and divides by how many — <b>=AVERAGE(B2:B10)</b>. The <b>median</b> lines the numbers up smallest to largest and takes the one in the middle — <b>=MEDIAN(B2:B10)</b>. Both claim to tell you what a typical room costs. Right now they will agree exactly. The next lesson is about what happens when they stop agreeing.',
+ hint:'E2 gets =AVERAGE(B2:B10). E3 gets =MEDIAN(B2:B10).',
+ setup:function(){
+   grid(11,6,{A1:'Room',B1:'Weekly rent',A2:'Room 1',B2:{v:'300',f:'aud'},A3:'Room 2',B3:{v:'320',f:'aud'},A4:'Room 3',B4:{v:'340',f:'aud'},A5:'Room 4',B5:{v:'350',f:'aud'},A6:'Room 5',B6:{v:'360',f:'aud'},A7:'Room 6',B7:{v:'370',f:'aud'},A8:'Room 7',B8:{v:'380',f:'aud'},A9:'Room 8',B9:{v:'400',f:'aud'},A10:'Room 9',B10:{v:'420',f:'aud'},D2:'Mean',D3:'Median'});
+   S.widths={A:80,B:110,C:40,D:70,E:100};sel.a=sel.b='E2';
+ },
+ check:function(){
+   var m=val('E2'),d=val('E3');
+   if(raw('E2')===''&&raw('E3')==='')return[0,''];
+   if(Math.abs(m-360)<0.01&&Math.abs(d-360)<0.01)return[1,'Both say $360. On tidy, evenly spread data the mean and the median land in the same place, which is why people assume they are interchangeable. Keep this sheet in mind — you break it in the next lesson.'];
+   if(Math.abs(m-360)<0.01)return[0,'Mean is right. Now the median in E3: =MEDIAN(B2:B10)'];
+   if(Math.abs(d-360)<0.01)return[0,'Median is right. Now the mean in E2: =AVERAGE(B2:B10)'];
+   return[0,'Not there yet — both should come out at 360. Check your range covers B2 down to B10.'];
+ }
+},
+{
+ title:'One typo, two very different answers',
+ sub:'what an outlier does',
+ task:'Room 5 was typed with an extra zero. Change B6 to 6200 and watch both numbers.',
+ teach:'A single wrong keystroke in a dataset of two thousand rows is normal, not exceptional. Watch what it does. The mean is calculated from <b>every</b> value, so one absurd number drags it. The median only cares about position, so it barely notices. This is the entire reason you never report an average without looking at the data first.',
+ hint:'Click B6, type 6200, press Enter. Then look at E2 and E3.',
+ setup:function(){
+   grid(11,6,{A1:'Room',B1:'Weekly rent',A2:'Room 1',B2:{v:'300',f:'aud'},A3:'Room 2',B3:{v:'320',f:'aud'},A4:'Room 3',B4:{v:'340',f:'aud'},A5:'Room 4',B5:{v:'350',f:'aud'},A6:'Room 5',B6:{v:'360',f:'aud'},A7:'Room 6',B7:{v:'370',f:'aud'},A8:'Room 7',B8:{v:'380',f:'aud'},A9:'Room 8',B9:{v:'400',f:'aud'},A10:'Room 9',B10:{v:'420',f:'aud'},D2:'Mean',E2:{v:'=AVERAGE(B2:B10)',f:'aud'},D3:'Median',E3:{v:'=MEDIAN(B2:B10)',f:'aud'}});
+   S.widths={A:80,B:110,C:40,D:70,E:100};sel.a=sel.b='B6';
+ },
+ check:function(){
+   var v=numOf('B6');
+   if(v===360)return[0,''];
+   if(v===6200){
+     var m=val('E2'),d=val('E3');
+     return[1,'Look at the gap. The mean went from $360 to $'+Math.round(m)+' — it now describes not one single room on this list. The median moved from $360 to $'+Math.round(d)+'. If you had reported the average rent in a housing report, you would have been out by nearly double because of one keystroke.'];
+   }
+   if(v!==null)return[0,'B6 is now '+v+'. The lesson wants 6200 — the same rent with one extra zero.'];
+   return[0,'That is not a number. Type 6200 into B6.'];
+ }
+},
+{
+ title:'How spread out is it?',
+ sub:'MIN, MAX and the range',
+ task:'In E4, calculate the range — the largest rent minus the smallest.',
+ teach:'Knowing the typical value is half the story. <b>Spread</b> is the other half: are these rooms all much the same, or wildly different? The crudest measure is the <b>range</b> — <b>=MAX(B2:B10)-MIN(B2:B10)</b>. You can put two functions in one formula like that; Excel works out the inside first. The range is easy but fragile, because it is built entirely from the two most extreme values, which are exactly the ones most likely to be typos.',
+ hint:'E4 gets =MAX(B2:B10)-MIN(B2:B10). Both functions in the one formula.',
+ setup:function(){
+   grid(11,6,{A1:'Room',B1:'Weekly rent',A2:'Room 1',B2:{v:'300',f:'aud'},A3:'Room 2',B3:{v:'320',f:'aud'},A4:'Room 3',B4:{v:'340',f:'aud'},A5:'Room 4',B5:{v:'350',f:'aud'},A6:'Room 5',B6:{v:'360',f:'aud'},A7:'Room 6',B7:{v:'370',f:'aud'},A8:'Room 7',B8:{v:'380',f:'aud'},A9:'Room 8',B9:{v:'400',f:'aud'},A10:'Room 9',B10:{v:'420',f:'aud'},D2:'Mean',E2:{v:'=AVERAGE(B2:B10)',f:'aud'},D3:'Median',E3:{v:'=MEDIAN(B2:B10)',f:'aud'},D4:'Range'});
+   S.widths={A:80,B:110,C:40,D:70,E:100};sel.a=sel.b='E4';
+ },
+ check:function(){
+   var v=val('E4');
+   if(raw('E4')==='')return[0,''];
+   if(Math.abs(v-120)<0.01)return[1,'$120 between cheapest and dearest. Now put the outlier back in — change B6 to 6200 again and the range leaps to $5,900. One number, and your measure of spread is meaningless. That fragility is why the next two lessons exist.'];
+   if(String(v).charAt(0)==='#')return[0,'An error. Check the spelling and brackets: =MAX(B2:B10)-MIN(B2:B10)'];
+   return[0,'Should come out at 120 — the largest, 420, minus the smallest, 300.'];
+ }
+},
+{
+ title:'Standard deviation',
+ sub:'same average, different story',
+ task:'In E4 and E5, calculate the standard deviation of each cafe\'s daily takings.',
+ teach:'Two cafes, five days, and the averages in E2 and E3 are already done — they are identical. But look at the columns. Cafe A takes about the same each day; Cafe B swings between dead and heaving. <b>Standard deviation</b> puts a number on that swing: roughly, the typical distance between a day and the average. Use <b>=STDEV.S(B2:B6)</b>. The .S means you are treating these five days as a <b>sample</b> of all possible days rather than the entire population, which is nearly always the case with real data.',
+ hint:'E4 gets =STDEV.S(B2:B6) for cafe A. E5 gets =STDEV.S(C2:C6) for cafe B.',
+ setup:function(){
+   grid(9,6,{A1:'Day',B1:'Cafe A',C1:'Cafe B',
+     A2:'Mon',B2:{v:'480',f:'aud'},C2:{v:'300',f:'aud'},
+     A3:'Tue',B3:{v:'500',f:'aud'},C3:{v:'700',f:'aud'},
+     A4:'Wed',B4:{v:'520',f:'aud'},C4:{v:'250',f:'aud'},
+     A5:'Thu',B5:{v:'490',f:'aud'},C5:{v:'750',f:'aud'},
+     A6:'Fri',B6:{v:'510',f:'aud'},C6:{v:'500',f:'aud'},
+     D2:'Mean A',E2:{v:'=AVERAGE(B2:B6)',f:'aud'},D3:'Mean B',E3:{v:'=AVERAGE(C2:C6)',f:'aud'},D4:'SD A',D5:'SD B'});
+   S.widths={A:60,B:90,C:90,D:70,E:100};sel.a=sel.b='E4';
+ },
+ check:function(){
+   var a=val('E4'),b=val('E5');
+   if(raw('E4')===''&&raw('E5')==='')return[0,''];
+   var oka=Math.abs(a-15.8114)<0.05,okb=Math.abs(b-226.3846)<0.5;
+   if(oka&&okb)return[1,'About $16 against about $226. Identical averages, and one of these cafes is a far riskier business to own than the other — the average alone could never have told you that. This is why every serious report of a mean is followed by a standard deviation.'];
+   if(oka)return[0,'Cafe A is right, around 15.8. Now E5: =STDEV.S(C2:C6)'];
+   if(okb)return[0,'Cafe B is right. Now E4: =STDEV.S(B2:B6)'];
+   if(String(a).charAt(0)==='#'||String(b).charAt(0)==='#')return[0,'Excel does not recognise that. The function is written STDEV.S — with a full stop before the S.'];
+   return[0,'Not quite. Cafe A should come out near 15.8, cafe B near 226.'];
+ }
+},
+{
+ title:'Quartiles and the outlier rule',
+ sub:'a test for "is this value suspicious?"',
+ task:'Fill E2 to E5: the first quartile, the third quartile, the IQR, and the upper limit.',
+ teach:'The typo is back in this data. Quartiles cut the sorted values into four equal groups. <b>=QUARTILE.INC(B2:B10,1)</b> gives the value a quarter of the way up; change the 1 to a 3 for three quarters. The gap between them is the <b>interquartile range</b>, and it describes the middle half of your data while completely ignoring the extremes. The standard test is: anything above <b>Q3 + 1.5 × IQR</b> deserves a second look. That is a rule you can apply to any dataset you are handed.',
+ hint:'E2: =QUARTILE.INC(B2:B10,1) — E3: =QUARTILE.INC(B2:B10,3) — E4: =E3-E2 — E5: =E3+1.5*E4',
+ setup:function(){
+   grid(11,6,{A1:'Room',B1:'Weekly rent',A2:'Room 1',B2:{v:'300',f:'aud'},A3:'Room 2',B3:{v:'320',f:'aud'},A4:'Room 3',B4:{v:'340',f:'aud'},A5:'Room 4',B5:{v:'350',f:'aud'},A6:'Room 5',B6:{v:'6200',f:'aud'},A7:'Room 6',B7:{v:'370',f:'aud'},A8:'Room 7',B8:{v:'380',f:'aud'},A9:'Room 8',B9:{v:'400',f:'aud'},A10:'Room 9',B10:{v:'420',f:'aud'},D2:'Q1',D3:'Q3',D4:'IQR',D5:'Upper limit'});
+   S.widths={A:80,B:110,C:30,D:90,E:100};sel.a=sel.b='E2';
+ },
+ check:function(){
+   var q1=val('E2'),q3=val('E3'),iq=val('E4'),up=val('E5');
+   if(raw('E2')==='')return[0,''];
+   if(Math.abs(q1-340)>0.01)return[0,'Q1 should be 340. Try =QUARTILE.INC(B2:B10,1) — the range first, then a comma, then the quarter you want.'];
+   if(raw('E3')==='')return[0,'Q1 is right. Now Q3 in E3 — the same formula with a 3 on the end.'];
+   if(Math.abs(q3-400)>0.01)return[0,'Q3 should be 400. Same formula as Q1 but ending in 3 instead of 1.'];
+   if(raw('E4')==='')return[0,'Both quartiles in. Now the IQR in E4 — it is just Q3 minus Q1, so =E3-E2'];
+   if(Math.abs(iq-60)>0.01)return[0,'IQR should be 60 — that is E3 minus E2.'];
+   if(raw('E5')==='')return[0,'Now the upper limit in E5: =E3+1.5*E4'];
+   if(Math.abs(up-490)>0.01)return[0,'The limit should be 490 — Q3 plus one and a half IQRs.'];
+   return[1,'The limit is $490, and Room 5 is sitting at $6,200. Flagged, by a rule rather than by your eye. On nine rows you could have spotted it yourself; on nine thousand you could not, and this test would still find it in one formula.'];
+ }
+},
+{
+ title:'Which number goes in the report?',
+ sub:'the part that is actually judgement',
+ task:'Read the mean and the median, then type either MEAN or MEDIAN into E5.',
+ teach:'Ten rentals near campus. Eight are ordinary rooms; two are whole apartments. Neither number in E2 or E3 is wrong — they answer different questions. Before you choose, ask who is reading it. A student wanting to know what they will pay for a room is badly served by a figure that no room on this list actually costs. There is no formula for this decision, which is exactly why it is the skill employers notice.',
+ hint:'Compare $1,031 against $620, then look back at the actual rents in column B. Which one describes what a student would really pay?',
+ setup:function(){
+   grid(13,6,{A1:'Listing',B1:'Weekly rent',
+     A2:'Room',B2:{v:'520',f:'aud'},A3:'Room',B3:{v:'550',f:'aud'},A4:'Room',B4:{v:'570',f:'aud'},
+     A5:'Room',B5:{v:'600',f:'aud'},A6:'Room',B6:{v:'610',f:'aud'},A7:'Room',B7:{v:'630',f:'aud'},
+     A8:'Room',B8:{v:'650',f:'aud'},A9:'Room',B9:{v:'680',f:'aud'},
+     A10:'Apartment',B10:{v:'2400',f:'aud'},A11:'Apartment',B11:{v:'3100',f:'aud'},
+     D2:'Mean',E2:{v:'=AVERAGE(B2:B11)',f:'aud'},D3:'Median',E3:{v:'=MEDIAN(B2:B11)',f:'aud'},D5:'Report the'});
+   S.widths={A:100,B:110,C:20,D:80,E:100};sel.a=sel.b='E5';
+ },
+ check:function(){
+   var v=raw('E5').toUpperCase().trim();
+   if(v==='')return[0,''];
+   if(v==='MEDIAN')return[1,'Median, at $620 — a figure that resembles what is actually on offer. The mean of $1,031 is pulled upwards by two apartments that are not competing for the same tenant. Note what you did not do: you did not delete the apartments. They are real listings. You chose a measure that survives them.'];
+   if(v==='MEAN'||v==='AVERAGE')return[-1,'Have another look at column B. The mean is $1,031, and not one of the eight rooms costs anywhere near that. A student reading your report would budget for something that does not exist. The two apartments are dragging it — which measure ignores them?'];
+   return[0,'Type just the one word — MEAN or MEDIAN — into E5.'];
+ }
+},
+{
+ title:'Best and worst',
+ sub:'MAX, MIN and LARGE',
+ task:'In E2 find the highest daily takings, in E3 the lowest, and in E4 the second highest.',
+ teach:'<b>=MAX(B2:B13)</b> and <b>=MIN(B2:B13)</b> pull out the extremes. Useful, but a single best day tells you very little on its own — it might be a fluke. <b>=LARGE(B2:B13,2)</b> gives the second largest, and changing the 2 walks you down the list. Checking the top few together is how you tell a genuine pattern from one good Saturday.',
+ hint:'E2: =MAX(B2:B13) — E3: =MIN(B2:B13) — E4: =LARGE(B2:B13,2)',
+ setup:function(){
+   grid(14,6,{A1:'Day',B1:'Takings',
+     A2:'Mon',B2:{v:'1240',f:'aud'},A3:'Tue',B3:{v:'980',f:'aud'},A4:'Wed',B4:{v:'1120',f:'aud'},
+     A5:'Thu',B5:{v:'1340',f:'aud'},A6:'Fri',B6:{v:'2180',f:'aud'},A7:'Sat',B7:{v:'2650',f:'aud'},
+     A8:'Sun',B8:{v:'1890',f:'aud'},A9:'Mon',B9:{v:'1050',f:'aud'},A10:'Tue',B10:{v:'890',f:'aud'},
+     A11:'Wed',B11:{v:'1210',f:'aud'},A12:'Thu',B12:{v:'1400',f:'aud'},A13:'Fri',B13:{v:'2240',f:'aud'},
+     D2:'Highest',D3:'Lowest',D4:'2nd highest'});
+   S.widths={A:70,B:100,C:30,D:90,E:100};sel.a=sel.b='E2';
+ },
+ check:function(){
+   var a=val('E2'),b=val('E3'),c=val('E4');
+   if(raw('E2')==='')return[0,''];
+   if(Math.abs(a-2650)>0.01)return[0,'The highest should be 2650. Try =MAX(B2:B13)'];
+   if(raw('E3')==='')return[0,'Highest is right. Now the lowest in E3.'];
+   if(Math.abs(b-890)>0.01)return[0,'The lowest should be 890. Try =MIN(B2:B13)'];
+   if(raw('E4')==='')return[0,'Now the second highest in E4: =LARGE(B2:B13,2)'];
+   if(Math.abs(c-2240)>0.01)return[0,'Second highest should be 2240 — =LARGE(B2:B13,2)'];
+   return[1,'2650, 890, and 2240 in second place. Both the top days are Saturdays and Fridays, which means the peak is a weekly pattern rather than a one-off. MAX alone would never have shown you that.'];
+ }
+},
+{
+ title:'Sorting without wrecking it',
+ sub:'the mistake that quietly ruins data',
+ task:'Sort the table so the highest takings are at the top. Use the controls under the grid.',
+ teach:'Sorting is where beginners destroy data without noticing. If you sort <b>only</b> the takings column, the numbers rearrange but the day names stay put — so Saturday ends up next to Tuesday\'s figure and every row is now a lie. Nothing goes red, nothing warns you. The rule is that a sort must move <b>whole rows</b>. Try the wrong button first if you want to see it happen; undo brings it back.',
+ hint:'Choose Takings, choose largest to smallest, then press "Sort the whole table".',
+ setup:function(){
+   grid(9,6,{A1:'Day',B1:'Takings',
+     A2:'Mon',B2:{v:'1240',f:'aud'},A3:'Tue',B3:{v:'980',f:'aud'},A4:'Wed',B4:{v:'1120',f:'aud'},
+     A5:'Thu',B5:{v:'1340',f:'aud'},A6:'Fri',B6:{v:'2180',f:'aud'},A7:'Sat',B7:{v:'2650',f:'aud'},
+     A8:'Sun',B8:{v:'1890',f:'aud'}});
+   S.widths={A:90,B:110};sel.a=sel.b='A1';
+ },
+ tool:'sort',
+ check:function(){
+   if(!T.sortMode)return[0,''];
+   if(T.sortMode==='column')return[-1,'Look at the table. The takings are in order, but Saturday is no longer sitting next to 2650 — the day names never moved. This is the single most common way real data gets silently corrupted. Press Undo, then sort the whole table instead.'];
+   if(T.sortedBy!=='B')return[0,'That sorted by the wrong field. Choose Takings, then sort the whole table.'];
+   if(T.sortDir!=='desc')return[0,'Sorted, but smallest first. Choose largest to smallest and sort again.'];
+   return[1,'Saturday on top at $2,650, and every day name still attached to its own number. In real Excel the safe habit is to click one cell inside the table and let Excel select the whole block for you, rather than highlighting a single column by hand.'];
+ }
+},
+{
+ title:'Counting and totalling with a condition',
+ sub:'COUNTIF and SUMIF',
+ task:'In E2 count how many sales were in NSW, and in E3 total their value.',
+ teach:'So far every function has taken the whole range. These two take a <b>condition</b> as well. <b>=COUNTIF(C2:C13,E1)</b> counts the rows where column C matches whatever is sitting in E1. <b>=SUMIF(C2:C13,E1,D2:D13)</b> finds the same rows but adds up column D for them — the range you test and the range you add are allowed to be different, and that trips people up constantly. Pointing the condition at a cell rather than typing NSW into the formula means you can change one cell and re-run the lot.',
+ hint:'E2: =COUNTIF(C2:C13,E1) — E3: =SUMIF(C2:C13,E1,D2:D13)',
+ setup:function(){
+   grid(14,6,{A1:'Order',B1:'Customer',C1:'State',D1:'Value',
+     A2:'1001',B2:'Nguyen',C2:'NSW',D2:{v:'420',f:'aud'},
+     A3:'1002',B3:'Patel',C3:'VIC',D3:{v:'180',f:'aud'},
+     A4:'1003',B4:'Brown',C4:'NSW',D4:{v:'650',f:'aud'},
+     A5:'1004',B5:'Kim',C5:'QLD',D5:{v:'240',f:'aud'},
+     A6:'1005',B6:'Singh',C6:'NSW',D6:{v:'310',f:'aud'},
+     A7:'1006',B7:'Walker',C7:'VIC',D7:{v:'520',f:'aud'},
+     A8:'1007',B8:'Chen',C8:'NSW',D8:{v:'190',f:'aud'},
+     A9:'1008',B9:'Murphy',C9:'WA',D9:{v:'380',f:'aud'},
+     A10:'1009',B10:'Taylor',C10:'NSW',D10:{v:'740',f:'aud'},
+     A11:'1010',B11:'Lee',C11:'QLD',D11:{v:'260',f:'aud'},
+     A12:'1011',B12:'Hall',C12:'VIC',D12:{v:'430',f:'aud'},
+     A13:'1012',B13:'Ahmed',C13:'NSW',D13:{v:'510',f:'aud'},
+     F1:'NSW',E1:'NSW',E2:'',E3:''});
+   delete S.cells.F1;
+   S.cells.E1={v:'NSW'};
+   S.widths={A:64,B:90,C:60,D:80,E:100};sel.a=sel.b='E2';
+ },
+ check:function(){
+   var a=val('E2'),b=val('E3');
+   if(raw('E2')==='')return[0,''];
+   if(a!==6)return[0,'The count should be 6. Try =COUNTIF(C2:C13,E1) — the column you are testing, then the thing you are testing for.'];
+   if(raw('E3')==='')return[0,'Six NSW orders, correct. Now their total value in E3.'];
+   if(Math.abs(b-2820)>0.01)return[0,'The total should be 2820. SUMIF needs three parts: =SUMIF(C2:C13,E1,D2:D13)'];
+   return[1,'Six orders worth $2,820. Now change E1 from NSW to VIC and both answers rewrite themselves — that is why the condition lives in a cell instead of buried in the formula.'];
+ }
+},
+{
+ title:'Fetching a matching value',
+ sub:'XLOOKUP',
+ task:'In E2, look up the price of the product code sitting in E1.',
+ teach:'You have a code and you need the thing that goes with it. <b>=XLOOKUP(E1,A2:A9,C2:C9)</b> reads as: take what is in E1, hunt for it down column A, and hand back whatever sits beside it in column C. Three parts — what you are looking for, where to look, what to bring back. Older spreadsheets use VLOOKUP, which does the same job but counts columns by number and breaks the moment somebody inserts a column. You will meet VLOOKUP in real files; XLOOKUP is what to write yourself.',
+ hint:'E2: =XLOOKUP(E1,A2:A9,C2:C9)',
+ setup:function(){
+   grid(11,6,{A1:'Code',B1:'Product',C1:'Price',
+     A2:'BK-101',B2:'Notebook',C2:{v:'6.50',f:'aud'},
+     A3:'BK-102',B3:'Ring binder',C3:{v:'9.90',f:'aud'},
+     A4:'PN-201',B4:'Pen pack',C4:{v:'4.20',f:'aud'},
+     A5:'PN-202',B5:'Highlighters',C5:{v:'7.80',f:'aud'},
+     A6:'CL-301',B6:'Calculator',C6:{v:'32.00',f:'aud'},
+     A7:'CL-302',B7:'Scientific calc',C7:{v:'58.50',f:'aud'},
+     A8:'BG-401',B8:'Backpack',C8:{v:'89.00',f:'aud'},
+     A9:'BG-402',B9:'Laptop sleeve',C9:{v:'34.50',f:'aud'},
+     E1:'CL-302',D1:'Looking for',D2:'Price'});
+   S.widths={A:78,B:110,C:80,D:88,E:100};sel.a=sel.b='E2';
+ },
+ check:function(){
+   var v=val('E2');
+   if(raw('E2')==='')return[0,''];
+   if(String(v)==='#N/A')return[0,'Excel searched and found nothing. Check the middle part is the column of codes, A2:A9.'];
+   if(Math.abs(v-58.5)<0.01)return[1,'$58.50. Now type BG-401 into E1 and the answer follows without you touching the formula. On a sheet of two thousand orders this is how you attach prices, names or categories to every row at once.'];
+   if(String(v).charAt(0)==='#')return[0,'Excel cannot read that. The shape is =XLOOKUP(what, where to look, what to bring back)'];
+   return[0,'Not the right price. E1 holds CL-302, which should come back as 58.50.'];
+ }
+},
+{
+ title:'PivotTable',
+ sub:'summarise 12 rows, or 12,000',
+ task:'Build a PivotTable that totals the order value for each state.',
+ teach:'Everything so far worked one answer at a time. A <b>PivotTable</b> answers the same question for every category at once. You tell it what to group the rows by, what number to summarise, and how to summarise it — and it does the rest. It sounds advanced and it is genuinely the easiest thing on this site, which is why it is worth learning early. In real Excel this is Insert, then PivotTable; the three choices you make there are exactly the three below.',
+ hint:'Group by State, summarise Value, and leave the third box on Sum.',
+ setup:function(){
+   grid(14,6,{A1:'Order',B1:'Customer',C1:'State',D1:'Value',
+     A2:'1001',B2:'Nguyen',C2:'NSW',D2:{v:'420',f:'aud'},
+     A3:'1002',B3:'Patel',C3:'VIC',D3:{v:'180',f:'aud'},
+     A4:'1003',B4:'Brown',C4:'NSW',D4:{v:'650',f:'aud'},
+     A5:'1004',B5:'Kim',C5:'QLD',D5:{v:'240',f:'aud'},
+     A6:'1005',B6:'Singh',C6:'NSW',D6:{v:'310',f:'aud'},
+     A7:'1006',B7:'Walker',C7:'VIC',D7:{v:'520',f:'aud'},
+     A8:'1007',B8:'Chen',C8:'NSW',D8:{v:'190',f:'aud'},
+     A9:'1008',B9:'Murphy',C9:'WA',D9:{v:'380',f:'aud'},
+     A10:'1009',B10:'Taylor',C10:'NSW',D10:{v:'740',f:'aud'},
+     A11:'1010',B11:'Lee',C11:'QLD',D11:{v:'260',f:'aud'},
+     A12:'1011',B12:'Hall',C12:'VIC',D12:{v:'430',f:'aud'},
+     A13:'1012',B13:'Ahmed',C13:'NSW',D13:{v:'510',f:'aud'}});
+   S.widths={A:64,B:96,C:62,D:86};sel.a=sel.b='A1';
+ },
+ tool:'pivot',
+ check:function(){
+   if(!T.pivBuilt)return[0,''];
+   if(T.pivRow!==2)return[0,'That grouped by the wrong field. You want one line per state, so group by State.'];
+   if(T.pivVal!==3)return[0,'Grouping is right. Now summarise the Value column.'];
+   if(T.pivAgg!=='sum')return[0,'Close. Switch the last box to Sum so it totals the values rather than counting them.'];
+   return[1,'Four states, four totals, one grand total — and it took three dropdowns rather than four SUMIF formulas. Switch the last box to Count and you get order numbers instead; switch it to Average and you get typical order size. Same three choices, three different questions answered.'];
+ }
+},
+{
+ title:'Choosing the right chart',
+ sub:'the chart is a decision, not a decoration',
+ task:'You want to show whether study hours and marks are related. Pick the chart that answers it.',
+ teach:'Chart types are not interchangeable. A <b>column</b> chart compares separate categories. A <b>line</b> chart shows movement over time. A <b>pie</b> chart shows parts of one whole and is nearly always the wrong choice. A <b>histogram</b> shows the shape of a single set of numbers. A <b>scatter</b> plot puts two measurements against each other for every case, and it is the only one that can show whether two things move together. Try the wrong ones and look at what they claim.',
+ hint:'Two measurements for each of the same twenty students. Which chart shows one against the other?',
+ setup:function(){
+   var d={A1:'Student',B1:'Study hours',C1:'Mark'};
+   var hrs=[4,6,7,9,10,11,12,13,14,15,16,17,18,19,20,22,23,25,27,30];
+   var mk=[41,48,52,55,61,58,64,67,63,71,69,74,78,72,80,83,79,86,88,91];
+   for(var i=0;i<20;i++){d['A'+(i+2)]='S'+(i+1);d['B'+(i+2)]=String(hrs[i]);d['C'+(i+2)]=String(mk[i]);}
+   grid(22,6,d);S.widths={A:80,B:100,C:70};sel.a=sel.b='A1';
+ },
+ tool:'chart',
+ chartLabels:'A2:A21',chartValues:'C2:C21',chartX:'B2:B21',chartXLabel:'Study hours',
+ check:function(){
+   if(!T.chartType)return[0,''];
+   if(T.chartType==='pie')return[-1,'A pie chart says these twenty marks are slices of one thing. They are not — they belong to twenty different students. Pie charts are for parts of a single whole, and almost nothing you meet at university is that.'];
+   if(T.chartType==='line')return[-1,'A line chart joins the dots, which claims the students are a sequence — that S7 comes after S6 in some meaningful way. They are just twenty people. Lines are for time.'];
+   if(T.chartType==='column')return[-1,'Columns compare the students against each other, which is readable but answers a different question. You were not asked who scored highest. You were asked whether hours and marks move together.'];
+   if(T.chartType==='histogram')return[-1,'A histogram shows how the marks are distributed, which is genuinely useful — but it only looks at one variable. The question involves two.'];
+   return[1,'Scatter. Every dot is one student, positioned by hours across and mark up. The cloud climbs from bottom-left to top-right, so more hours generally goes with higher marks. Note what you cannot say from this: that studying caused the marks. A scatter shows association, and that is all it shows.'];
+ }
+},
+{
+ title:'The chart that lies',
+ sub:'where the axis starts',
+ task:'This column chart starts its axis part-way up. Tick the box to start it at zero, and compare.',
+ teach:'Four campus cafes, and their prices are within forty cents of each other. With the axis cut off near the bottom of the data, the tallest bar looks several times the shortest and the chart screams "huge difference". Start the axis at zero and the same four numbers look nearly identical, which is the truth. Nobody edited the data. This is the most common misleading chart you will meet, it is usually done by accident, and once you have seen it you check every axis for the rest of your life.',
+ hint:'Choose Column first, then tick the box on the right of the toolbar.',
+ setup:function(){
+   grid(7,6,{A1:'Cafe',B1:'Flat white',
+     A2:'Library',B2:{v:'5.20',f:'aud'},A3:'Quad',B3:{v:'5.40',f:'aud'},
+     A4:'Science',B4:{v:'5.50',f:'aud'},A5:'Sports hall',B5:{v:'5.60',f:'aud'}});
+   S.widths={A:110,B:110};sel.a=sel.b='A1';
+ },
+ tool:'chart',axisToggle:true,axisZeroDefault:false,
+ chartLabels:'A2:A5',chartValues:'B2:B5',
+ check:function(){
+   if(!T.chartType)return[0,''];
+   if(T.chartType!=='column')return[0,'Switch to Column — that is the type this trick usually appears in.'];
+   if(!T.axisZero)return[0,'Now tick the box to start the axis at zero, and watch the bars.'];
+   return[1,'Forty cents. That is the entire difference the first chart made look dramatic. Whenever a bar chart makes a difference look enormous, find the bottom of the axis before you believe it — and when you build your own, start bar charts at zero unless you have a stated reason not to.'];
+ }
+},
+{
+ title:'Numbers that are not numbers',
+ sub:'why SUM says the wrong thing',
+ task:'The total in B7 is wrong. Fix the amounts so it adds up to 1300.',
+ teach:'Look carefully at column B. Some numbers sit on the <b>right</b> of their cell and some sit on the <b>left</b>. That is the only clue Excel gives you: numbers go right, text goes left. The left-aligned ones are text that happens to look like a number, usually from a copy-paste or a downloaded file, and SUM skips them completely. Nothing turns red. You just get a total that is quietly too small. Retype each left-aligned value as a plain number.',
+ hint:'B2, B4 and B6 are text. Click each one, type the number again, press enter.',
+ setup:function(){
+   grid(9,5,{A1:'Item',B1:'Amount',A2:'Printing',B2:"'120",A3:'Stationery',B3:'340',A4:'Postage',B4:"'210",A5:'Software',B5:'450',A6:'Courier',B6:"'180",A7:'Total',B7:'=SUM(B2:B6)'});
+   S.widths={A:110,B:110};sel.a=sel.b='B2';
+ },
+ check:function(){
+   var t=val('B7');
+   if(t===790)return[0,''];
+   if(t===1300)return[1,'1300, the way it should have been all along. The lesson is the alignment: if a number sits on the left of its cell, Excel does not think it is a number. On a downloaded bank statement or a copied web table this happens constantly, and the only warning you get is a total that looks a bit low.'];
+   if(typeof t==='number'&&t>790)return[0,'Getting closer, '+t+' so far. Keep going, there is still a left-aligned value in there.'];
+   return[0,'Something has gone astray. Press Undo, or start this one over.'];
+ }
+},
+{
+ title:'The date that means two things',
+ sub:'03/04/2026 is not what an American thinks',
+ task:'In E2, type the month that 03/04/2026 falls in for an Australian file.',
+ teach:'Excel does not store 03/04/2026 as text. It stores a number and shows it to you according to the region your computer is set to. In Australia that is day first, so it means the 3rd of April. In the United States it is month first, so the same file means the 4th of March. When you open a spreadsheet exported from an overseas system, every date in it can be silently wrong, and only the ones past the 12th of the month look obviously odd.',
+ hint:'Australian order is day, then month, then year. Type just the month name.',
+ setup:function(){
+   grid(8,6,{A1:'Invoice',B1:'Date',A2:'INV-01',B2:'03/04/2026',A3:'INV-02',B3:'11/02/2026',A4:'INV-03',B4:'25/12/2025',D1:'For 03/04/2026',D2:'Month'});
+   S.widths={A:80,B:100,C:20,D:110,E:100};sel.a=sel.b='E2';
+ },
+ check:function(){
+   var v=String(val('E2')).toUpperCase().trim();
+   if(v==='')return[0,''];
+   if(v==='APRIL'||v==='APR')return[1,'April. Now look at the third row, 25/12/2025. There is no 25th month, so that one could only ever be read one way. That is the trap: some dates are ambiguous and some are not, and only the ambiguous ones convert silently. A column mixing both is the worst case of all.'];
+   if(v==='MARCH'||v==='MAR')return[-1,'That is the American reading. In an Australian file the day comes first, so 03 is the day and 04 is the month. This exact confusion is why overseas date columns cause so much grief.'];
+   return[0,'Type just the month name.'];
+ }
+},
+{
+ title:'The disappearing zero',
+ sub:'postcodes, phone numbers, ID codes',
+ task:'B2 should be the Darwin postcode 0800, not 800. Fix it.',
+ teach:'Type a Darwin postcode into Excel and the leading zero vanishes, because Excel decided it was a number and numbers do not start with zero. Same for phone numbers and any ID code. The fix is to tell Excel it is <b>text</b> rather than a number, and the quickest way is to start it with an apostrophe. Type an apostrophe then 0800, and the apostrophe itself will not show. That is a real Excel trick, not something invented for this site.',
+ hint:"Click B2 and type an apostrophe followed by 0800, like this: '0800",
+ setup:function(){
+   grid(7,5,{A1:'Suburb',B1:'Postcode',A2:'Darwin',B2:'800',A3:'Sydney',B3:'2000',A4:'Melbourne',B4:'3000'});
+   S.widths={A:110,B:110};sel.a=sel.b='B2';
+ },
+ check:function(){
+   var v=val('B2');
+   if(v===800)return[0,''];
+   if(String(v)==='0800')return[1,'0800, zero intact. Notice it now sits on the left, because it is text. That is the trade: you keep the zero but you give up doing arithmetic on it. For a postcode that is exactly right, since nobody adds up postcodes.'];
+   return[0,"Not quite. Type an apostrophe first, then the four digits: '0800"];
+ }
+},
+{
+ title:'What kind of number is it?',
+ sub:'formatting, and what it does not change',
+ task:'Format B2 as a percentage, then format C2 down to C5 as currency.',
+ teach:'The GST rate in B2 is stored as 0.1, which is correct but reads badly. Formatting changes how a number <b>looks</b> without touching what it <b>is</b>. Format 0.1 as a percentage and it displays 10%, but the stored value is still 0.1, so every formula pointing at it keeps working. This catches people both ways: they see 10% and multiply by 10% again, or they see a tidy $4.00 and cannot work out why the total is off by a cent.',
+ hint:'Click B2, press Percent. Then drag from C2 down to C5 and press Currency.',
+ setup:function(){
+   grid(7,5,{A1:'Rate',B1:'Value',A2:'GST',B2:'0.1',C1:'GST amount',C2:'9.5',
+     A3:'Laptop',C3:'145',A4:'Chair',C4:'32',A5:'Monitor',C5:'54'});
+   S.widths={A:100,B:100,C:110};sel.a=sel.b='B2';
+ },
+ tool:'format',
+ check:function(){
+   var bf=S.cells.B2&&S.cells.B2.f,cs=['C2','C3','C4','C5'],n=0;
+   for(var i=0;i<cs.length;i++)if(S.cells[cs[i]]&&S.cells[cs[i]].f==='aud')n++;
+   if(!bf&&!n)return[0,''];
+   if(bf!=='pct')return[0,'Select B2 and press Percent. 0.1 should read as 10%.'];
+   if(n<4)return[0,'B2 is done. Now drag from C2 down to C5 and press Currency ('+n+' of 4 so far).'];
+   return[1,'Same numbers, different clothes. B2 still holds 0.1 and every formula pointing at it still works. You changed the display, not the value, and that distinction is the one to hold on to.'];
+ }
+},
+{
+ title:'Paste the answer, not the recipe',
+ sub:'Paste Values',
+ task:'Copy C2 and get the same amount into E2.',
+ teach:'C2 holds a formula, not a number. Copy it, paste it two columns across, and Excel does what it always does: it shifts the references, so the pasted formula points somewhere else entirely and gives a different answer. Try the ordinary Paste first and look at what you get. <b>Paste values only</b> pastes the result instead of the recipe, which is what you want when you are sending a figure to somebody or freezing a number in place.',
+ hint:'Click C2, press Copy. Click E2, press Paste to see what goes wrong, then press Paste values only.',
+ setup:function(){
+   grid(7,6,{A1:'Item',B1:'Price',C1:'With GST',A2:'Laptop',B2:{v:'1450',f:'aud'},C2:{v:'=B2*1.1',f:'aud'},E1:'Amount'});
+   S.widths={A:90,B:90,C:100,D:60,E:100};sel.a=sel.b='C2';
+ },
+ tool:'clip',
+ check:function(){
+   if(!T.pasteMode)return[0,''];
+   var v=val('E2');
+   if(T.pasteMode==='formula'&&raw('E2').charAt(0)==='=')
+     return[-1,'Look at E2. The formula came across but it shifted, so it now points at D2, which is empty. You get 0 instead of 1595. Excel was not being difficult: that shifting is the very same behaviour that makes the fill handle useful. Here it is the wrong thing. Try Paste values only.'];
+   if(Math.abs(v-1595)<0.01&&raw('E2').charAt(0)!=='=')
+     return[1,'1595, the answer rather than the recipe. E2 now holds a plain number that cannot shift and cannot break. Use this before emailing a figure to anyone, and whenever a formula has done its job and you want the result frozen.'];
+   return[0,'Not there yet. Copy C2 first, then click E2 and use Paste values only.'];
+ }
+},
+{
+ title:'The blank row that eats your data',
+ sub:'why your total is short',
+ task:'B12 is meant to total every week. Fix it so it does.',
+ teach:'There is an empty row sitting in the middle of this data. Whenever Excel guesses a range for you, with AutoSum, or when you click one cell and sort, or when you build a PivotTable, it stops at the first blank row, because it assumes that is where your table ends. The total in B12 covers only the rows above the gap and looks perfectly reasonable. Widen the range yourself and see what it was missing.',
+ hint:'Click B12 and change the range so it runs from B2 all the way down to B10.',
+ setup:function(){
+   grid(13,5,{A1:'Week',B1:'Sales',
+     A2:'W1',B2:'1240',A3:'W2',B3:'980',A4:'W3',B4:'1610',A5:'W4',B5:'1105',
+     A7:'W5',B7:'1370',A8:'W6',B8:'890',A9:'W7',B9:'1420',A10:'W8',B10:'1060',
+     A12:'Total',B12:'=SUM(B2:B5)'});
+   S.widths={A:90,B:110};sel.a=sel.b='B12';
+ },
+ check:function(){
+   var v=val('B12');
+   if(v===4935)return[0,''];
+   if(v===9675)return[1,'9675, against the 4935 it was quietly reporting before. Almost half the sales were missing and the number looked entirely believable. If you take one habit from this lesson, it is to delete empty rows out of a dataset before you do anything else with it.'];
+   if(typeof v==='number')return[0,'That gives '+v+'. The full range runs from B2 down to B10.'];
+   return[0,'Check the formula in B12. It should be =SUM(B2:B10)'];
+ }
+},
+{
+ title:'Making Excel decide',
+ sub:'the IF function',
+ task:'In C2 write a formula that says Pass if the mark is 50 or more, and Fail if it is not. Then fill it down to C9.',
+ teach:'Every formula so far calculated something. <b>IF</b> makes a decision. It takes three parts: a question, what to do if the answer is yes, and what to do if it is no. So <b>=IF(B2&gt;=50,"Pass","Fail")</b> reads as: is B2 at least 50? If yes put Pass, if no put Fail. The quotation marks matter, because they tell Excel that Pass is a word and not the name of something. This is the function that appears on graduate job descriptions more than any other.',
+ hint:'Type =IF(B2>=50,"Pass","Fail") into C2, press enter, then drag the fill handle down to C9.',
+ setup:function(){
+   grid(11,5,{A1:'Student',B1:'Mark',C1:'Result',
+     A2:'Nguyen',B2:'72',A3:'Patel',B3:'45',A4:'Brown',B4:'88',A5:'Kim',B5:'50',
+     A6:'Singh',B6:'38',A7:'Walker',B7:'61',A8:'Chen',B8:'49',A9:'Taylor',B9:'93'});
+   S.widths={A:110,B:80,C:100};sel.a=sel.b='C2';
+ },
+ check:function(){
+   var f=raw('C2').toUpperCase();
+   if(f==='')return[0,''];
+   if(f.indexOf('IF')===-1)return[-1,'That is not making a decision. The shape is =IF(question, answer if yes, answer if no).'];
+   var want=['Pass','Fail','Pass','Pass','Fail','Pass','Fail','Pass'],ks=['C2','C3','C4','C5','C6','C7','C8','C9'],n=0,i;
+   for(i=0;i<8;i++)if(String(val(ks[i])).toUpperCase()===want[i].toUpperCase())n++;
+   if(n===8)return[1,'Eight decisions from one formula. Look at C5 in particular: the mark is exactly 50 and it says Pass, because you wrote greater-than-or-equal rather than greater-than. That single character is the difference between a student passing and failing, and it is the most common mistake in this function.'];
+   if(String(val('C5')).toUpperCase()==='FAIL')return[-1,'Seven of eight, and the one that is wrong is the interesting one. Kim scored exactly 50, which should pass. You have written greater-than where you want greater-than-or-equal: >= rather than >. One character, one student.'];
+   if(String(val('C2')).toUpperCase()==='PASS'&&n<8)return[0,'C2 is right. Now drag the fill handle down to C9 ('+n+' of 8 so far).'];
+   return[0,'Not there yet. Check the quotation marks around Pass and Fail.'];
+ }
+},
+{
+ title:'When two things have to be true',
+ sub:'AND and OR',
+ task:'In D2, mark a student Eligible only if they passed the mark AND attended at least 80 per cent. Fill down to D9.',
+ teach:'One condition is rarely enough in real work. <b>AND</b> is true only when everything inside it is true; <b>OR</b> is true when at least one thing is. You drop them inside IF as the question: <b>=IF(AND(B2&gt;=50,C2&gt;=80),"Eligible","Not eligible")</b>. Swap AND for OR and the meaning flips completely, so read the requirement carefully before you write it. Here a student needs both, so it is AND.',
+ hint:'=IF(AND(B2>=50,C2>=80),"Eligible","Not eligible") in D2, then fill down.',
+ setup:function(){
+   grid(11,6,{A1:'Student',B1:'Mark',C1:'Attendance',D1:'Status',
+     A2:'Nguyen',B2:'72',C2:'90',A3:'Patel',B3:'45',C3:'95',A4:'Brown',B4:'88',C4:'60',
+     A5:'Kim',B5:'50',C5:'80',A6:'Singh',B6:'38',C6:'40',A7:'Walker',B7:'61',C7:'85',
+     A8:'Chen',B8:'77',C8:'79',A9:'Taylor',B9:'93',C9:'99'});
+   S.widths={A:90,B:70,C:95,D:110};sel.a=sel.b='D2';
+ },
+ check:function(){
+   var f=raw('D2').toUpperCase();
+   if(f==='')return[0,''];
+   if(f.indexOf('OR(')>-1&&f.indexOf('AND(')===-1)
+     return[-1,'You have used OR, which passes anyone who meets either condition. Brown attended only 60 per cent and would slip through. The requirement says both, so it needs AND.'];
+   if(f.indexOf('AND(')===-1)return[0,'You need AND inside the IF: =IF(AND(B2>=50,C2>=80),"Eligible","Not eligible")'];
+   var want=[1,0,0,1,0,1,0,1],ks=['D2','D3','D4','D5','D6','D7','D8','D9'],n=0,i;
+   for(i=0;i<8;i++){var e=String(val(ks[i])).toUpperCase()==='ELIGIBLE';if(e===!!want[i])n++;}
+   if(n===8)return[1,'Four eligible out of eight. Look at Chen: a mark of 77, attendance of 79. One per cent short, and the formula does not care how close it was. That is worth remembering when you write rules that decide things about people.'];
+   return[0,n+' of 8 correct so far. If C2 is right, drag the fill handle down to D9.'];
+ }
+},
+{
+ title:'More than two outcomes',
+ sub:'putting an IF inside an IF',
+ task:'In C2, turn each mark into an Australian grade: HD from 85, D from 75, C from 65, otherwise P. Fill down to C9.',
+ teach:'IF gives you two outcomes. For more, you put another IF where the "no" answer goes, and Excel works down the chain until something is true. <b>=IF(B2&gt;=85,"HD",IF(B2&gt;=75,"D",IF(B2&gt;=65,"C","P")))</b>. Order matters enormously: test the highest band first, because a mark of 90 is also above 65 and whichever test comes first wins. Count your closing brackets at the end, since three IFs need three of them.',
+ hint:'=IF(B2>=85,"HD",IF(B2>=75,"D",IF(B2>=65,"C","P"))) — three IFs, three closing brackets.',
+ setup:function(){
+   grid(11,5,{A1:'Student',B1:'Mark',C1:'Grade',
+     A2:'Nguyen',B2:'72',A3:'Patel',B3:'45',A4:'Brown',B4:'88',A5:'Kim',B5:'50',
+     A6:'Singh',B6:'66',A7:'Walker',B7:'79',A8:'Chen',B8:'85',A9:'Taylor',B9:'93'});
+   S.widths={A:110,B:80,C:90};sel.a=sel.b='C2';
+ },
+ check:function(){
+   var f=raw('C2').toUpperCase();
+   if(f==='')return[0,''];
+   var v=String(val('C2'));
+   if(v.charAt(0)==='#')return[-1,'Excel cannot read it, and with nested IFs the cause is almost always brackets. Three IFs need three closing brackets at the very end.'];
+   var want=['C','P','HD','P','C','D','HD','HD'],ks=['C2','C3','C4','C5','C6','C7','C8','C9'],n=0,i;
+   for(i=0;i<8;i++)if(String(val(ks[i])).toUpperCase()===want[i])n++;
+   if(n===8)return[1,'Eight marks, four grades, one formula. Chen sat on exactly 85 and got an HD because you tested the top band first. Had you written the tests the other way up, every single student would have come out as P, and the formula would have looked perfectly reasonable.'];
+   if(String(val('C4')).toUpperCase()==='C')return[-1,'Brown scored 88 and came out as C. Your bands are in the wrong order: Excel stops at the first test that is true, and 88 is above 65, so it never reaches the HD test. Put the highest band first and work down.'];
+   return[0,n+' of 8 right. If C2 is correct, fill down to C9.'];
+ }
+},
+{
+ title:'Project: a spreadsheet nobody explained',
+ sub:'find what is wrong with it first',
+ task:'This is a fortnight of cafe sales. Something in it is wrong. Find it and fix it, then put a correct total in B18.',
+ teach:'No instructions this time. A manager has handed you a file, and that is exactly how it arrives in a real job: no explanation, no warning about what is broken. Everything you need is in the earlier parts. Look at how the numbers sit in their cells, and look at the shape of the table itself. When you believe the data is clean, total it in B18.',
+ hint:'Two separate problems: some values are text rather than numbers, and there is an empty row splitting the table.',
+ setup:function(){
+   grid(20,5,{A1:'Day',B1:'Takings',
+     A2:'Mon',B2:'1240',A3:'Tue',B3:"'980",A4:'Wed',B4:'1120',A5:'Thu',B5:'1340',
+     A6:'Fri',B6:'2180',A7:'Sat',B7:'2650',A8:'Sun',B8:'1890',
+     A10:'Mon',B10:'1050',A11:'Tue',B11:"'890",A12:'Wed',B12:'1210',A13:'Thu',B13:'1400',
+     A14:'Fri',B14:'2240',A15:'Sat',B15:'2710',A16:'Sun',B16:"'1830",
+     A18:'Total'});
+   S.widths={A:90,B:110};sel.a=sel.b='A1';
+ },
+ check:function(){
+   var t=val('B18');
+   if(raw('B18')==='')return[0,''];
+   if(t===22730)return[1,'22,730. Three values were text and an empty row sat between the two weeks. Trust the sheet and you report 10,420, which looks entirely plausible and is less than half the truth. Nobody told you any of that was there. You found it.'];
+   if(t===10420)return[-1,'10,420 is what you get by trusting the sheet. Two things are hiding: three values sit on the left of their cells, and a blank row between the weeks stops the range early.'];
+   if(t===20030)return[-1,'20,030 means you caught the blank row but not the text. Three values are still sitting on the left of their cells, and SUM is ignoring them.'];
+   if(t===11400)return[-1,'That is week one only, and it is missing a text value as well. The table runs further down than the first blank row suggests.'];
+   if(typeof t==='number')return[0,'That gives '+t+'. Still short. Check both the alignment of the numbers and the full extent of the table.'];
+   return[0,'Put a total in B18.'];
+ }
+},
+{
+ title:'Project: say something useful',
+ sub:'the part that is actually the job',
+ task:'Work out the busiest day and the average, then in E5 type the measure you would report: MEAN or MEDIAN.',
+ teach:'A total is not a finding. Your manager wants to know what the numbers say. Calculate what you need in column E, look at the shape of the fortnight, then make the call in E5. There is no formula for that last decision, which is exactly why it is the part people get hired for.',
+ hint:'E2 the highest day, E3 the mean, E4 the median. Then look at whether the weekend days pull the average away from a typical weekday.',
+ setup:function(){
+   grid(18,6,{A1:'Day',B1:'Takings',
+     A2:'Mon',B2:'1240',A3:'Tue',B3:'980',A4:'Wed',B4:'1120',A5:'Thu',B5:'1340',
+     A6:'Fri',B6:'2180',A7:'Sat',B7:'2650',A8:'Sun',B8:'1890',
+     A9:'Mon',B9:'1050',A10:'Tue',B10:'890',A11:'Wed',B11:'1210',A12:'Thu',B12:'1400',
+     A13:'Fri',B13:'2240',A14:'Sat',B14:'2710',A15:'Sun',B15:'1830',
+     D2:'Busiest',D3:'Mean',D4:'Median',D5:'Report the'});
+   S.widths={A:70,B:95,C:20,D:80,E:95};sel.a=sel.b='E2';
+ },
+ check:function(){
+   var a=val('E2'),b=val('E3'),c=val('E4'),d=String(val('E5')).toUpperCase().trim();
+   if(raw('E2')==='')return[0,''];
+   if(Math.abs(a-2710)>0.01)return[0,'E2 should be the busiest day: =MAX(B2:B15)'];
+   if(raw('E3')==='')return[0,'Busiest day found. Now the mean in E3.'];
+   if(Math.abs(b-1623.57)>1)return[0,'The mean should be about 1623.57. Try =AVERAGE(B2:B15)'];
+   if(raw('E4')==='')return[0,'Now the median in E4.'];
+   if(Math.abs(c-1370)>0.01)return[0,'The median should be 1370. Try =MEDIAN(B2:B15)'];
+   if(d==='')return[0,'Both are calculated. Now decide which one you would put in front of the manager, and type it in E5.'];
+   if(d==='MEDIAN')return[1,'Median, and here is why it holds up: the four weekend days sit far above everything else and drag the mean upward, so 1,624 describes no ordinary weekday. The median of 1,370 is much closer to an ordinary day. Either number is defensible if you say which you used and why, and that sentence is the whole job.'];
+   if(d==='MEAN'||d==='AVERAGE')return[-1,'Defensible, but think about who is reading it. Four weekend days sit well above the rest and pull the mean up, so 1,624 is higher than almost every weekday. If the manager is planning weekday staffing, that number will mislead them. Look at the median instead.'];
+   return[0,'Type one word in E5: MEAN or MEDIAN.'];
+ }
+},
+{
+ title:'The spaces you cannot see',
+ sub:'TRIM and LEN',
+ task:'In C2 count the characters in A2. In D2 produce a clean version of the name.',
+ teach:'A2 looks like a name. It is actually a name with stray spaces around and inside it, invisible on screen and fatal to a lookup, because Excel matching is exact and a trailing space makes two identical-looking names different. <b>=LEN(A2)</b> counts every character including spaces, which is how you prove the problem exists. <b>=TRIM(A2)</b> strips the ends and squashes doubled spaces in the middle. Data pasted from a website or a PDF is riddled with these.',
+ hint:'C2: =LEN(A2) and D2: =TRIM(A2)',
+ setup:function(){
+   grid(8,6,{A1:'Name as received',B1:'Mark',C1:'Characters',D1:'Cleaned',
+     A2:"'  Sarah  Nguyen  ",B2:'72',A3:'Sarah Nguyen',B3:'72'});
+   S.widths={A:150,B:60,C:90,D:130};sel.a=sel.b='C2';
+ },
+ check:function(){
+   var n=val('C2'),t=val('D2');
+   if(raw('C2')==='')return[0,''];
+   if(n!==17)return[0,'C2 should come out at 17. Try =LEN(A2) \u2014 it counts spaces too.'];
+   if(raw('D2')==='')return[0,'17 characters for a 12-character name, so five of them are spaces. Now clean it in D2 with TRIM.'];
+   if(String(t)!=='Sarah Nguyen')return[0,'D2 should read Sarah Nguyen with single spaces. Try =TRIM(A2)'];
+   return[1,'Seventeen characters became twelve. A2 and A3 look identical on screen and Excel considers them different, so any XLOOKUP or COUNTIF matching against A2 quietly fails and reports nothing found. TRIM every text column you receive before you match anything against it.'];
+ }
+},
+{
+ title:'Pulling a code apart',
+ sub:'LEFT, MID and RIGHT',
+ task:'Split the product code in A2 into its three pieces: faculty in C2, number in D2, state in E2.',
+ teach:'Codes arrive glued together and you need the parts. <b>=LEFT(A2,3)</b> takes the first three characters. <b>=RIGHT(A2,3)</b> takes the last three. <b>=MID(A2,5,4)</b> starts at the fifth character and takes four. Counting the start position is where people slip, so count carefully: B is 1, U is 2, S is 3, the dash is 4, and the number begins at 5.',
+ hint:'C2: =LEFT(A2,3) — D2: =MID(A2,5,4) — E2: =RIGHT(A2,3)',
+ setup:function(){
+   grid(7,6,{A1:'Product code',C1:'Faculty',D1:'Number',E1:'State',
+     A2:"'BUS-2041-NSW",A3:"'ENG-1180-VIC",A4:"'ART-3355-QLD"});
+   S.widths={A:130,B:20,C:90,D:90,E:80};sel.a=sel.b='C2';
+ },
+ check:function(){
+   var a=String(val('C2')),b=String(val('D2')),c=String(val('E2'));
+   if(raw('C2')==='')return[0,''];
+   if(a!=='BUS')return[0,'C2 should be BUS. Try =LEFT(A2,3)'];
+   if(raw('D2')==='')return[0,'Faculty done. Now the number in D2 with MID.'];
+   if(b!=='2041')return[0,'D2 should be 2041. The number starts at character 5 and runs for 4: =MID(A2,5,4)'];
+   if(raw('E2')==='')return[0,'Now the state in E2 with RIGHT.'];
+   if(c!=='NSW')return[0,'E2 should be NSW. Try =RIGHT(A2,3)'];
+   return[1,'Three fields out of one. Fill these down and the whole column splits at once, which is how you turn a glued-together export into something you can sort, filter and pivot on. Note that 2041 came out as text rather than a number, because these functions always return text \u2014 worth remembering if you then try to add them up.'];
+ }
+},
+{
+ title:'Getting the year out of a date',
+ sub:'DAY, MONTH and YEAR',
+ task:'In C2, D2 and E2 pull out the day, the month and the year of the invoice date.',
+ teach:'Once Excel understands a column as dates, you can take it apart. <b>=DAY(B2)</b>, <b>=MONTH(B2)</b> and <b>=YEAR(B2)</b> give you the three pieces as numbers. This is how you group a year of transactions by month, or count how many invoices fell in a particular quarter. It also gives you a quick sanity check on an imported file: if MONTH returns something above 12 you have an impossible date, and if a column of Australian dates suddenly reports months where you expected days, the file has been read in American order.',
+ hint:'C2: =DAY(B2) — D2: =MONTH(B2) — E2: =YEAR(B2)',
+ setup:function(){
+   grid(7,6,{A1:'Invoice',B1:'Date',C1:'Day',D1:'Month',E1:'Year',
+     A2:'INV-01',B2:'03/04/2026',A3:'INV-02',B3:'25/12/2025',A4:'INV-03',B4:'11/02/2026'});
+   S.widths={A:80,B:100,C:70,D:70,E:70};sel.a=sel.b='C2';
+ },
+ check:function(){
+   var d=val('C2'),m=val('D2'),y=val('E2');
+   if(raw('C2')==='')return[0,''];
+   if(d!==3)return[0,'C2 should be 3, the day. Try =DAY(B2)'];
+   if(raw('D2')==='')return[0,'Now the month in D2.'];
+   if(m!==4)return[0,'D2 should be 4, the month. Try =MONTH(B2)'];
+   if(raw('E2')==='')return[0,'Now the year in E2.'];
+   if(y!==2026)return[0,'E2 should be 2026. Try =YEAR(B2)'];
+   return[1,'3, 4 and 2026. Fill these down a column of two thousand transactions and you can then count by month, total by year, or pivot on either. Extracting the parts is almost always the first step before any date analysis.'];
+ }
+},
+{
+ title:'When a formula returns an error',
+ sub:'IFERROR',
+ task:'E2 is showing an error because the code is not in the list. Make it say Not found instead.',
+ teach:'Errors are not bugs. A lookup that finds nothing genuinely has no answer, and <b>#N/A</b> is Excel saying so honestly. The trouble is that one error contaminates everything downstream: sum a column containing #N/A and the total is an error too. <b>=IFERROR(your formula, "Not found")</b> runs the formula and, only if it fails, shows your message instead. Use it to make a report readable, not to hide problems you have not looked at.',
+ hint:'Wrap the existing lookup: =IFERROR(XLOOKUP(E1,A2:A6,B2:B6),"Not found")',
+ setup:function(){
+   grid(8,6,{A1:'Code',B1:'Price',
+     A2:'BK-101',B2:{v:'6.50',f:'aud'},A3:'BK-102',B3:{v:'9.90',f:'aud'},
+     A4:'PN-201',B4:{v:'4.20',f:'aud'},A5:'CL-301',B5:{v:'32.00',f:'aud'},
+     A6:'BG-401',B6:{v:'89.00',f:'aud'},
+     D1:'Looking for',E1:'ZZ-999',D2:'Price',E2:'=XLOOKUP(E1,A2:A6,B2:B6)'});
+   S.widths={A:80,B:80,C:20,D:90,E:110};sel.a=sel.b='E2';
+ },
+ check:function(){
+   var v=String(val('E2'));
+   if(v==='#N/A')return[0,''];
+   if(v==='Not found')return[1,'Readable. Now change E1 to BK-102 and it goes back to showing the price, because IFERROR only steps in when the formula actually fails. One caution: never wrap a formula in IFERROR before you understand why it is failing. Hiding a broken reference is much worse than seeing it.'];
+   if(v.charAt(0)==='#')return[0,'Still an error. The shape is =IFERROR(the formula that might fail, what to show instead)'];
+   return[0,'E2 should read Not found while E1 holds a code that is not in the list.'];
+ }
+},
+{
+ title:'Percentage change',
+ sub:'growth from one period to the next',
+ task:'In C3 calculate the growth from February to March, then fill down to C6.',
+ teach:'The formula every business subject assumes you know and none of them teach: <b>(new minus old) divided by old</b>, so <b>=(B3-B2)/B2</b>. Dividing by the old value is what makes it a proportion of where you started. Format the answer as a percentage and 0.3 reads as 30%. Two things to watch. A fall gives a negative number, which is correct and not an error. And percentage changes never add up across periods, so a 30% rise followed by a 10% fall does not leave you 20% ahead.',
+ hint:'C3: =(B3-B2)/B2 then drag down to C6. Format the column as Percent if you want it to read as 30%.',
+ setup:function(){
+   grid(9,5,{A1:'Month',B1:'Sales',C1:'Growth',
+     A2:'Feb',B2:{v:'1240',f:'aud'},A3:'Mar',B3:{v:'1612',f:'aud'},A4:'Apr',B4:{v:'1450',f:'aud'},
+     A5:'May',B5:{v:'1885',f:'aud'},A6:'Jun',B6:{v:'2170',f:'aud'}});
+   S.widths={A:90,B:100,C:110};sel.a=sel.b='C3';
+ },
+ tool:'format',
+ check:function(){
+   var a=val('C3');
+   if(raw('C3')==='')return[0,''];
+   if(Math.abs(a-0.3)>0.001)return[0,'C3 should come out at 0.3, or 30% once formatted. The shape is (new minus old) divided by old: =(B3-B2)/B2'];
+   var ks=['C4','C5','C6'],want=[-0.100496,0.3,0.151194],n=0,i;
+   for(i=0;i<3;i++)if(Math.abs(val(ks[i])-want[i])<0.001)n++;
+   if(n<3)return[0,'C3 is right. Now fill it down to C6 ('+n+' of 3 so far).'];
+   return[1,'Look at April: a fall of 10%, showing as a negative number rather than an error. And notice March and May both rose 30% from very different starting points, which is exactly what a percentage is for. Format the column as Percent and it reads the way a manager expects.'];
+ }
+},
+{
+ title:'Rounding is not formatting',
+ sub:'ROUND, and why your total is out by a cent',
+ task:'In C2 to C4, produce properly rounded values, then total them in C5.',
+ teach:'Formatting a number to two decimal places changes only what you see. The full value is still there and Excel still adds the hidden digits, which is why a column of neatly formatted figures can total to something that looks wrong by a cent. <b>=ROUND(B2,2)</b> genuinely changes the value to two decimals. Use formatting when you just want it to read tidily, and ROUND when the rounded figure is the real answer, such as money that somebody is actually being charged.',
+ hint:'C2: =ROUND(B2,2) then fill down to C4, and put =SUM(C2:C4) in C5.',
+ setup:function(){
+   grid(8,5,{A1:'Item',B1:'Exact',C1:'Rounded',
+     A2:'Labour',B2:'12.346',A3:'Parts',B3:'8.514',A4:'Freight',B4:'5.229',
+     A5:'Total',B5:'=SUM(B2:B4)'});
+   S.widths={A:90,B:100,C:100};sel.a=sel.b='C2';
+ },
+ check:function(){
+   var t=val('C5');
+   if(raw('C2')==='')return[0,''];
+   if(Math.abs(val('C2')-12.35)>0.0001)return[0,'C2 should be 12.35. Try =ROUND(B2,2)'];
+   if(raw('C5')==='')return[0,'Good. Fill down to C4, then total the rounded column in C5.'];
+   if(Math.abs(t-26.09)>0.0001)return[0,'C5 should total 26.09. Fill C2 down to C4 first, then =SUM(C2:C4)'];
+   return[1,'The exact total is 26.089 and the rounded total is 26.09. A cent apart, and on an invoice that cent matters. This is the single most common source of the sentence, the spreadsheet says one thing and the system says another.'];
+ }
+},
+{
+ title:'Do these two things move together?',
+ sub:'CORREL',
+ task:'In E2, calculate the correlation between study hours and marks.',
+ teach:'You saw the scatter plot climb from bottom-left to top-right. <b>=CORREL(B2:B21,C2:C21)</b> puts a number on that. It runs from -1 to 1: near 1 means they rise together, near -1 means one rises as the other falls, and near 0 means no straight-line relationship at all. Above about 0.7 is usually called strong. The warning is the same as before and worth repeating: a high correlation says the two move together, not that one causes the other.',
+ hint:'E2: =CORREL(B2:B21,C2:C21)',
+ setup:function(){
+   var d={A1:'Student',B1:'Study hours',C1:'Mark',D2:'Correlation'};
+   var hrs=[4,6,7,9,10,11,12,13,14,15,16,17,18,19,20,22,23,25,27,30];
+   var mk=[41,48,52,55,61,58,64,67,63,71,69,74,78,72,80,83,79,86,88,91];
+   for(var i=0;i<20;i++){d['A'+(i+2)]='S'+(i+1);d['B'+(i+2)]=String(hrs[i]);d['C'+(i+2)]=String(mk[i]);}
+   grid(22,6,d);S.widths={A:70,B:95,C:60,D:90,E:100};sel.a=sel.b='E2';
+ },
+ check:function(){
+   var v=val('E2');
+   if(raw('E2')==='')return[0,''];
+   if(Math.abs(v-0.974528)<0.001)return[1,'0.97, which is about as strong as real data ever gets. Two cautions worth carrying out of here. Correlation only measures straight-line relationships, so a real pattern that curves can show up near zero. And this number cannot tell you whether studying raises marks, or whether students who were going to do well were always the ones who studied.'];
+   if(String(v).charAt(0)==='#')return[0,'CORREL needs two ranges of the same length: =CORREL(B2:B21,C2:C21)'];
+   return[0,'Not quite. Both ranges run from row 2 to row 21.'];
+ }
+},
+{
+ title:'Filter, do not delete',
+ sub:'hide what you are not looking at',
+ task:'Show only the NSW orders.',
+ teach:'Sorting rearranges everything. <b>Filtering</b> just hides what you are not interested in, and the hidden rows are still there, still counted, still safe. This is the single most-used tool in a real office and it is why nobody deletes rows to "focus on" a subset. Notice the row numbers when the filter is on: they jump, because the rows in between are hidden rather than gone.',
+ hint:'Choose State, choose NSW, then press Apply filter.',
+ setup:function(){grid(13,5,{A1:'Order',B1:'State',C1:'Customer',D1:'Value',
+     A2:'1001',B2:'NSW',C2:'Nguyen',D2:{v:'420',f:'aud'},
+     A3:'1002',B3:'VIC',C3:'Patel',D3:{v:'180',f:'aud'},
+     A4:'1003',B4:'NSW',C4:'Brown',D4:{v:'650',f:'aud'},
+     A5:'1004',B5:'QLD',C5:'Kim',D5:{v:'240',f:'aud'},
+     A6:'1005',B6:'NSW',C6:'Singh',D6:{v:'310',f:'aud'},
+     A7:'1006',B7:'VIC',C7:'Walker',D7:{v:'520',f:'aud'},
+     A8:'1007',B8:'NSW',C8:'Chen',D8:{v:'190',f:'aud'},
+     A9:'1008',B9:'WA',C9:'Murphy',D9:{v:'380',f:'aud'},
+     A10:'1009',B10:'NSW',C10:'Taylor',D10:{v:'740',f:'aud'},
+     A11:'1010',B11:'QLD',C11:'Lee',D11:{v:'260',f:'aud'}});S.widths={A:70,B:60,C:90,D:80};sel.a=sel.b='A1';},
+ tool:'filter',
+ check:function(){
+   if(!T.filterOn)return[0,''];
+   if(T.filterCol!==1)return[0,'That filtered on the wrong column. Choose State.'];
+   if(T.filterVal!=='NSW')return[0,'Filtered on '+T.filterVal+'. Choose NSW.'];
+   return[1,'Five NSW orders, and look at the row numbers down the left: 2, 4, 6, 8, 10. The gaps are the hidden rows, still sitting there untouched. Clear the filter and everything returns. This is how you inspect a subset without ever putting the original data at risk.'];
+ }
+},
+{
+ title:'The same record, twice',
+ sub:'Remove Duplicates',
+ task:'This export has repeated rows. Remove them.',
+ teach:'Exports double up. A system runs twice, two people upload the same file, a join goes wrong, and suddenly your totals are inflated by rows that describe the same event. <b>Remove Duplicates</b> compares whole rows and keeps the first of each. Two warnings that matter: it is permanent, so work on a copy or be ready with Undo, and it only catches rows that match <b>exactly</b> \u2014 a stray space or a different capitalisation makes two identical records look different, which is why you TRIM before you deduplicate.',
+ hint:'Press Remove duplicates and watch the total.',
+ setup:function(){
+   grid(13,5,{A1:'Order',B1:'Customer',C1:'Value',
+     A2:'1001',B2:'Nguyen',C2:{v:'420',f:'aud'},
+     A3:'1002',B3:'Patel',C3:{v:'180',f:'aud'},
+     A4:'1001',B4:'Nguyen',C4:{v:'420',f:'aud'},
+     A5:'1003',B5:'Brown',C5:{v:'650',f:'aud'},
+     A6:'1004',B6:'Kim',C6:{v:'240',f:'aud'},
+     A7:'1002',B7:'Patel',C7:{v:'180',f:'aud'},
+     A8:'1005',B8:'Singh',C8:{v:'310',f:'aud'},
+     A9:'1001',B9:'Nguyen',C9:{v:'420',f:'aud'}});
+   S.widths={A:80,B:100,C:90};sel.a=sel.b='A1';
+ },
+ tool:'dedupe',
+ check:function(){
+   if(!T.dedupeDone)return[0,''];
+   if(T.removed===3)return[1,'Three rows gone, and the total these rows add to drops from $2,820 to $1,800. Over a thousand dollars of revenue that never existed, and nothing about the original sheet looked wrong. This is why deduplicating comes before any analysis, not after you have already reported the numbers.'];
+   return[0,'Removed '+T.removed+'. There should be three exact repeats in there.'];
+ }
+},
+{
+ title:'Fixing the same mistake everywhere',
+ sub:'Find and Replace',
+ task:'The state is written as N.S.W. in some rows and NSW in others. Make them all NSW.',
+ teach:'Inconsistent text is the quiet killer of any grouping. If half your rows say NSW and half say N.S.W., a PivotTable will faithfully report two separate states and your COUNTIF will find half of what is there. <b>Find and Replace</b> fixes the lot in one pass. Be careful what you type into it: replacing a short string can hit places you did not intend, so look at how many cells it says it changed and make sure that number matches what you expected.',
+ hint:'Find N.S.W. and replace it with NSW.',
+ setup:function(){
+   grid(11,5,{A1:'Order',B1:'State',C1:'Value',
+     A2:'1001',B2:'NSW',C2:{v:'420',f:'aud'},
+     A3:'1002',B3:'N.S.W.',C3:{v:'180',f:'aud'},
+     A4:'1003',B4:'VIC',C4:{v:'650',f:'aud'},
+     A5:'1004',B5:'N.S.W.',C5:{v:'240',f:'aud'},
+     A6:'1005',B6:'NSW',C6:{v:'310',f:'aud'},
+     A7:'1006',B7:'N.S.W.',C7:{v:'520',f:'aud'}});
+   S.widths={A:80,B:90,C:90};sel.a=sel.b='A1';
+ },
+ tool:'findreplace',
+ check:function(){
+   var bad=0,i,ks=['B2','B3','B4','B5','B6','B7'];
+   for(i=0;i<6;i++)if(String(val(ks[i])).indexOf('.')>-1)bad++;
+   if(!T.replaced)return[0,''];
+   if(bad)return[0,'Still '+bad+' rows with dots in them. Find N.S.W. exactly as it appears.'];
+   return[1,'One pass, three cells, and now a COUNTIF on NSW finds five rows instead of two. Before this fix, any summary of this sheet would have quietly reported two different New South Waleses.'];
+ }
+},
+{
+ title:'Making the numbers show themselves',
+ sub:'conditional formatting',
+ task:'Select C2 to C11 and highlight every order above 400.',
+ teach:'<b>Conditional formatting</b> colours cells according to a rule you set, and it updates itself when the data changes. It is the fastest way to see the shape of a column without calculating anything \u2014 outliers, failures, anything over budget. Use it to look, not to report: colour carries no meaning to somebody reading a printout, and it is invisible to every formula you write afterwards.',
+ hint:'Drag from C2 to C11 first, then set greater than 400 and press Apply.',
+ setup:function(){
+   grid(13,4,{A1:'Order',B1:'Customer',C1:'Value',
+     A2:'1001',B2:'Nguyen',C2:{v:'420',f:'aud'},A3:'1002',B3:'Patel',C3:{v:'180',f:'aud'},
+     A4:'1003',B4:'Brown',C4:{v:'650',f:'aud'},A5:'1004',B5:'Kim',C5:{v:'240',f:'aud'},
+     A6:'1005',B6:'Singh',C6:{v:'310',f:'aud'},A7:'1006',B7:'Walker',C7:{v:'520',f:'aud'},
+     A8:'1007',B8:'Chen',C8:{v:'190',f:'aud'},A9:'1008',B9:'Murphy',C9:{v:'380',f:'aud'},
+     A10:'1009',B10:'Taylor',C10:{v:'740',f:'aud'},A11:'1010',B11:'Lee',C11:{v:'260',f:'aud'}});
+   S.widths={A:80,B:100,C:100};sel.a=sel.b='C2';
+ },
+ tool:'condformat',
+ check:function(){
+   if(!T.cfDone)return[0,''];
+   if(T.cfOp!=='gt'||T.cfVal!==400)return[0,'Set it to greater than 400 and apply it again.'];
+   if(T.cfCount!==4)return[0,'That highlighted '+T.cfCount+' cells. Make sure C2 down to C11 is selected before you apply.'];
+   return[1,'Four orders above $400, visible in a glance without a single formula. Change any of those values and the colour follows. Remember what it is for: this is a way of looking at data, not a way of recording a decision, because no formula can read a colour.'];
+ }
+},
+{
+ title:'Stopping bad data getting in',
+ sub:'data validation and drop-down lists',
+ task:'Add a drop-down list to column B, then try typing something that is not on it.',
+ teach:'Everything so far has been about cleaning up mess after it arrived. <b>Data validation</b> stops it arriving. You attach a list of allowed values to a column, and Excel simply refuses anything else, showing the user a drop-down instead of a blank box. If you ever build a spreadsheet other people will type into \u2014 a booking sheet, a survey, a team tracker \u2014 this is the difference between clean data and a column containing NSW, nsw, N.S.W. and New South Wales.',
+ hint:'Press the button to apply the list, then click a cell in column B and type something like Tasmania.',
+ validList:['NSW','VIC','QLD','WA','SA','TAS'],
+ setup:function(){
+   grid(9,4,{A1:'Order',B1:'State',C1:'Value',
+     A2:'1001',B2:'NSW',C2:{v:'420',f:'aud'},A3:'1002',B3:'VIC',C3:{v:'180',f:'aud'},
+     A4:'1003',C4:{v:'650',f:'aud'},A5:'1004',C5:{v:'240',f:'aud'}});
+   S.widths={A:80,B:110,C:90};sel.a=sel.b='B4';
+ },
+ tool:'validation',
+ check:function(){
+   if(!T.validOn)return[0,''];
+   if(S.rejected===0)return[0,'List applied. Now click B4 and type a state that is not on the list, such as Tasmania, to see what happens.'];
+   return[1,'Rejected before it ever reached the sheet. That is the whole idea: it is far cheaper to prevent one bad entry than to find it six months later in a column of two thousand. Note that TAS is on the allowed list and Tasmania is not, which is a reminder that a validation list also enforces a house style.'];
+ }
+},
+{
+ title:'Splitting a column without formulas',
+ sub:'Text to Columns',
+ task:'Split the code in column A into three separate columns.',
+ teach:'You already did this with LEFT, MID and RIGHT. <b>Text to Columns</b> does the same job from the menu, in one step, when every code follows the same pattern with a separator. The trade-off is worth knowing: the menu is faster but it is a one-off action, so if new data arrives you have to do it again. Formulas are slower to write and update themselves forever. Choose the menu for a one-time clean-up and formulas for anything that will be repeated.',
+ hint:'Choose a dash as the separator and press Text to Columns.',
+ setup:function(){
+   grid(8,5,{A1:'Code',B1:'Faculty',C1:'Number',D1:'State',
+     A2:"'BUS-2041-NSW",A3:"'ENG-1180-VIC",A4:"'ART-3355-QLD",A5:"'SCI-2290-WA"});
+   S.widths={A:130,B:80,C:80,D:70};sel.a=sel.b='A2';
+ },
+ tool:'split',
+ check:function(){
+   if(!T.splitDone)return[0,''];
+   if(T.splitDelim!=='-')return[0,'That separator did not split anything useful. The parts are joined by dashes.'];
+   if(String(val('B2'))!=='BUS'||String(val('D2'))!=='NSW')return[0,'Something is off. Press Start this one over and try the dash.'];
+   return[1,'Four rows split in one action. Two things to carry away: the parts come out as text, so a number that gets split is no longer a number until you convert it, and this overwrites whatever was in the columns to the right without asking. Always check there is empty space before you run it.'];
+ }
+},
+{
+ title:'The gaps in the data',
+ sub:'missing values',
+ task:'Count how many marks are missing, then decide in E4: DROP or ZERO.',
+ teach:'Real datasets have holes. Somebody did not sit the exam, a sensor failed, a form was left blank. What you do about them changes your answer completely. Filling blanks with zero says the student scored nothing, which drags the average down and is usually a lie. Leaving them out says you are describing only the students who sat, which is usually what you want, and Excel already does this: AVERAGE ignores blank cells entirely. The wrong move is to type 0 without thinking, because a blank and a zero are different claims about the world.',
+ hint:'E2 counts the marks present with COUNT. E3 is the average. Then decide whether a missing exam should count as zero.',
+ setup:function(){
+   grid(11,6,{A1:'Student',B1:'Mark',
+     A2:'Nguyen',B2:'72',A3:'Patel',B3:'45',A4:'Brown',A5:'Kim',B5:'50',
+     A6:'Singh',A7:'Walker',B7:'61',A8:'Chen',B8:'77',A9:'Taylor',B9:'93',
+     D2:'Marks present',D3:'Average',D4:'Missing exams'});
+   S.widths={A:90,B:70,C:20,D:110,E:100};sel.a=sel.b='E2';
+ },
+ check:function(){
+   var n=val('E2'),a=val('E3'),d=String(val('E4')).toUpperCase().trim();
+   if(raw('E2')==='')return[0,''];
+   if(n!==6)return[0,'E2 should be 6. Try =COUNT(B2:B9) \u2014 it counts only cells holding numbers.'];
+   if(raw('E3')==='')return[0,'Six marks present out of eight students. Now the average in E3.'];
+   if(Math.abs(a-66.333)>0.01)return[0,'The average should be about 66.33. Try =AVERAGE(B2:B9)'];
+   if(d==='')return[0,'Now the judgement call in E4: should a missing exam count as a zero, or be left out? Type DROP or ZERO.'];
+   if(d==='DROP')return[1,'Dropping them, and the average of 66.33 describes the six students who actually sat. Fill the blanks with zeros instead and it falls to 49.75, a number that describes nobody. Whichever you choose, the rule is to say which you did. An average with unexplained missing data is not a finding.'];
+   if(d==='ZERO')return[-1,'Sometimes right, usually not. If Brown and Singh simply did not sit the exam, calling it zero says they attempted it and scored nothing, and the class average falls from 66.33 to 49.75 on the strength of that assumption. Zero is a real mark. A blank is an absence. Try DROP.'];
+   return[0,'Type one word in E4: DROP or ZERO.'];
+ }
+},
+{
+ title:'The most common answer',
+ sub:'mode, and when it is the only average you have',
+ task:'In E2 find the most common satisfaction rating, and in E3 count how many people gave it.',
+ teach:'The mean and the median both need numbers you can order. The <b>mode</b> just asks which value appears most often, so it works on anything at all, including plain categories. <b>=MODE.SNGL(B2:B13)</b> gives it. For a satisfaction rating, which you know from part 3 is ordinal, the mode is honest in a way the mean is not: saying most people answered 4 is a fact, while saying the average was 3.58 quietly assumes the gaps between the ratings are equal.',
+ hint:'E2: =MODE.SNGL(B2:B13) and E3: =COUNTIF(B2:B13,E2)',
+ setup:function(){
+   grid(15,6,{A1:'Response',B1:'Rating',
+     A2:'R1',B2:'4',A3:'R2',B3:'5',A4:'R3',B4:'4',A5:'R4',B5:'3',A6:'R5',B6:'4',
+     A7:'R6',B7:'2',A8:'R7',B8:'4',A9:'R8',B9:'5',A10:'R9',B10:'3',A11:'R10',B11:'4',
+     A12:'R11',B12:'1',A13:'R12',B13:'4',
+     D2:'Most common',D3:'How many'});
+   S.widths={A:80,B:70,C:20,D:100,E:90};sel.a=sel.b='E2';
+ },
+ check:function(){
+   var m=val('E2'),c=val('E3');
+   if(raw('E2')==='')return[0,''];
+   if(m!==4)return[0,'The most common rating is 4. Try =MODE.SNGL(B2:B13)'];
+   if(raw('E3')==='')return[0,'Correct. Now count how many gave that rating, in E3.'];
+   if(c!==6)return[0,'E3 should be 6. Try =COUNTIF(B2:B13,E2)'];
+   return[1,'Six of twelve people answered 4. That sentence is defensible to anyone. The mean of these same twelve is 3.58, which sounds more precise and rests on an assumption about the gaps between ratings that nobody can justify. When your data is categorical or ordinal, the mode is not a lesser answer \u2014 it is the correct one.'];
+ }
+}
+];
+
+/* ---------------- tools: sort, chart, pivot ---------------- */
+var T={sortedBy:null,sortDir:null,sortMode:null,chartType:null,axisZero:false,pivRow:null,pivVal:null,pivAgg:null,pivBuilt:false};
+var toolsEl=document.getElementById('tools');
+
+function colVals(c,r1,r2){var o=[];for(var r=r1;r<=r2;r++)o.push(val(ref(c,r)));return o;}
+function blockRows(){
+  var last=1;
+  for(var r=1;r<S.rows;r++){var any=false;for(var c=0;c<S.cols;c++)if(raw(ref(c,r))!=='')any=true;if(any)last=r;}
+  return last;
+}
+function sortNow(wholeTable,colIdx,dir){
+  snapshot();
+  var last=blockRows(),n=last;
+  var idx=[];for(var r=1;r<=last;r++)idx.push(r);
+  idx.sort(function(a,b){
+    var x=val(ref(colIdx,a)),y=val(ref(colIdx,b));
+    var xn=typeof x==='number',yn=typeof y==='number';
+    var cmp;
+    if(xn&&yn)cmp=x-y;else cmp=String(x).localeCompare(String(y));
+    return dir==='desc'?-cmp:cmp;
+  });
+  var snap={};
+  for(var c=0;c<S.cols;c++)for(var r=1;r<=last;r++)snap[ref(c,r)]=S.cells[ref(c,r)]?JSON.parse(JSON.stringify(S.cells[ref(c,r)])):null;
+  for(var i=0;i<idx.length;i++){
+    var src=idx[i],dst=i+1;
+    if(wholeTable){
+      for(var c2=0;c2<S.cols;c2++){var o=snap[ref(c2,src)];if(o)S.cells[ref(c2,dst)]=o;else delete S.cells[ref(c2,dst)];}
+    }else{
+      var o2=snap[ref(colIdx,src)];if(o2)S.cells[ref(colIdx,dst)]=o2;else delete S.cells[ref(colIdx,dst)];
+    }
+  }
+  T.sortedBy=COLS[colIdx];T.sortDir=dir;T.sortMode=wholeTable?'table':'column';
+  render();check();
+}
+function svgChart(type,labels,values,opts){
+  opts=opts||{};
+  var W=620,H=260,pad={l:52,r:14,t:14,b:38},iw=W-pad.l-pad.r,ih=H-pad.t-pad.b;
+  var nums=values.filter(function(v){return typeof v==='number';});
+  if(!nums.length)return '<p style="color:var(--ink-faint);font-size:14px;margin:0">Nothing numeric to plot.</p>';
+  var mx=Math.max.apply(null,nums),mn=Math.min.apply(null,nums);
+  var base=opts.axisZero===false?mn-(mx-mn)*0.08:0;
+  if(opts.axisZero===false&&base<0&&mn>=0)base=mn*0.98;
+  var top=mx+(mx-base)*0.08;
+  var y=function(v){return pad.t+ih-((v-base)/(top-base))*ih;};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace" font-size="10.5">';
+  var ticks=4,i;
+  for(i=0;i<=ticks;i++){
+    var tv=base+(top-base)*i/ticks,ty=y(tv);
+    s+='<line x1="'+pad.l+'" y1="'+ty.toFixed(1)+'" x2="'+(W-pad.r)+'" y2="'+ty.toFixed(1)+'" stroke="#DCE3DD"/>';
+    s+='<text x="'+(pad.l-7)+'" y="'+(ty+3.5).toFixed(1)+'" text-anchor="end" fill="#8B9A92">'+Math.round(tv).toLocaleString('en-AU')+'</text>';
+  }
+  var n=values.length,slot=iw/n;
+  if(type==='column'||type==='histogram'){
+    var bw=Math.min(slot*0.62,54);
+    for(i=0;i<n;i++){
+      if(typeof values[i]!=='number')continue;
+      var bx=pad.l+slot*i+(slot-bw)/2,by=y(values[i]),bh=Math.max(1,pad.t+ih-by);
+      s+='<rect x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="#46766A"'+(type==='histogram'?' stroke="#fff" stroke-width="1"':'')+'/>';
+    }
+  }else if(type==='line'){
+    var pts=[];
+    for(i=0;i<n;i++)if(typeof values[i]==='number')pts.push((pad.l+slot*i+slot/2).toFixed(1)+','+y(values[i]).toFixed(1));
+    s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="#46766A" stroke-width="2"/>';
+    for(i=0;i<pts.length;i++){var p=pts[i].split(',');s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3" fill="#46766A"/>';}
+  }else if(type==='scatter'){
+    var xs=opts.xs||[],xn=xs.filter(function(v){return typeof v==='number';});
+    var xmx=Math.max.apply(null,xn),xmn=Math.min.apply(null,xn);
+    var xf=function(v){return pad.l+((v-xmn)/((xmx-xmn)||1))*iw;};
+    for(i=0;i<n;i++)if(typeof values[i]==='number'&&typeof xs[i]==='number')
+      s+='<circle cx="'+xf(xs[i]).toFixed(1)+'" cy="'+y(values[i]).toFixed(1)+'" r="4" fill="#46766A" fill-opacity="0.75"/>';
+    s+='<text x="'+(pad.l+iw/2)+'" y="'+(H-6)+'" text-anchor="middle" fill="#5A6B62">'+(opts.xlab||'')+'</text>';
+    return s+'</svg>';
+  }else if(type==='pie'){
+    var tot=nums.reduce(function(a,b){return a+b;},0),ang=-Math.PI/2,cx=W/2,cy=H/2,rr=Math.min(ih,W)/2.4;
+    var shades=['#46766A','#5E9184','#7FAEA1','#A3C8BE','#C6DFD8','#E3F0EB'];
+    for(i=0;i<n;i++){
+      if(typeof values[i]!=='number')continue;
+      var a2=ang+(values[i]/tot)*Math.PI*2,lg=(a2-ang)>Math.PI?1:0;
+      s+='<path d="M'+cx+' '+cy+' L'+(cx+rr*Math.cos(ang)).toFixed(1)+' '+(cy+rr*Math.sin(ang)).toFixed(1)+' A'+rr+' '+rr+' 0 '+lg+' 1 '+(cx+rr*Math.cos(a2)).toFixed(1)+' '+(cy+rr*Math.sin(a2)).toFixed(1)+' Z" fill="'+shades[i%6]+'"/>';
+      ang=a2;
+    }
+    return s+'</svg>';
+  }
+  for(i=0;i<n;i++){
+    var lb=String(labels[i]===undefined?'':labels[i]);
+    if(lb.length>9)lb=lb.slice(0,8)+'…';
+    s+='<text x="'+(pad.l+slot*i+slot/2).toFixed(1)+'" y="'+(H-14)+'" text-anchor="middle" fill="#5A6B62">'+esc(lb)+'</text>';
+  }
+  s+='<line x1="'+pad.l+'" y1="'+(pad.t+ih)+'" x2="'+(W-pad.r)+'" y2="'+(pad.t+ih)+'" stroke="#C8D3CC"/>';
+  return s+'</svg>';
+}
+function pivot(rowCol,valCol,agg){
+  var last=blockRows(),groups={},order=[];
+  for(var r=1;r<=last;r++){
+    var k=String(val(ref(rowCol,r))),v=numOf(ref(valCol,r));
+    if(k==='')continue;
+    if(!groups[k]){groups[k]=[];order.push(k);}
+    if(v!==null)groups[k].push(v);
+  }
+  var rows=[],grand=[];
+  for(var i=0;i<order.length;i++){
+    var a=groups[order[i]],out;
+    grand=grand.concat(a);
+    if(agg==='count')out=a.length;
+    else if(agg==='average')out=a.length?a.reduce(function(x,y){return x+y;},0)/a.length:0;
+    else out=a.reduce(function(x,y){return x+y;},0);
+    rows.push([order[i],out]);
+  }
+  var g;
+  if(agg==='count')g=grand.length;
+  else if(agg==='average')g=grand.length?grand.reduce(function(x,y){return x+y;},0)/grand.length:0;
+  else g=grand.reduce(function(x,y){return x+y;},0);
+  return {rows:rows,grand:g};
+}
+function money(n){return '$'+Number(n).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function headerName(c){var h=raw(ref(c,0));return h||COLS[c];}
+function buildTools(L){
+  T.sortedBy=null;T.sortDir=null;T.sortMode=null;T.chartType=null;T.axisZero=(L.axisZeroDefault!==false);T.pivRow=null;T.pivVal=null;T.pivAgg=null;T.pivBuilt=false;T.clip=null;T.pasteMode=null;T.filterOn=false;T.dedupeDone=false;T.removed=0;T.replaced=0;T.cfDone=false;T.validOn=false;T.splitDone=false;
+  if(!L.tool){toolsEl.className='tools';toolsEl.innerHTML='';return;}
+  toolsEl.className='tools on';
+  var h='',c;
+  if(L.tool==='sort'){
+    h='<div class="toolrow"><label>Sort by</label><select id="sortcol">';
+    for(c=0;c<S.cols;c++)if(raw(ref(c,0))!=='')h+='<option value="'+c+'">'+esc(headerName(c))+'</option>';
+    h+='</select><select id="sortdir"><option value="asc">Smallest to largest (A to Z)</option><option value="desc">Largest to smallest (Z to A)</option></select>'+
+      '<button class="btn-quiet" id="sortcolonly">Sort this column only</button>'+
+      '<button class="btn" id="sorttable" style="padding:7px 14px;font-size:14px">Sort the whole table</button></div>';
+  }else if(L.tool==='chart'){
+    h='<div class="toolrow"><label>Chart type</label><div class="seg" id="ctseg">'+
+      '<button data-t="column">Column</button><button data-t="line">Line</button><button data-t="pie">Pie</button><button data-t="scatter">Scatter</button><button data-t="histogram">Histogram</button></div>';
+    if(L.axisToggle)h+='<label style="margin-left:auto"><input type="checkbox" id="axzero"'+(T.axisZero?' checked':'')+'> Start the axis at zero</label>';
+    h+='</div><div class="chartbox" id="chartbox"><p style="color:var(--ink-faint);font-size:14px;margin:0">Pick a chart type above.</p></div>';
+  }else if(L.tool==='format'){
+    h='<div class="toolrow"><label>Format the selected cells as</label><div class="seg" id="fmtseg">'+
+      '<button data-f="">General</button><button data-f="num">Number</button><button data-f="aud">Currency</button><button data-f="pct">Percent</button></div></div>';
+  }else if(L.tool==='clip'){
+    h='<div class="toolrow"><button class="btn-quiet" id="clcopy">Copy</button>'+
+      '<button class="btn-quiet" id="clpaste">Paste</button>'+
+      '<button class="btn" id="clpastev" style="padding:7px 14px;font-size:14px">Paste values only</button>'+
+      '<span id="clnote" style="font-size:13.5px;color:var(--ink-faint)">Nothing copied yet.</span></div>';
+  }else if(L.tool==='filter'){
+    h='<div class="toolrow"><label>Filter</label><select id="flcol">';
+    for(c=0;c<S.cols;c++)if(raw(ref(c,0))!=='')h+='<option value="'+c+'">'+esc(headerName(c))+'</option>';
+    h+='</select><label>equals</label><select id="flval"></select>'+
+      '<button class="btn" id="flgo" style="padding:7px 14px;font-size:14px">Apply filter</button>'+
+      '<button class="btn-quiet" id="flclr">Clear</button>'+
+      '<span id="flnote" style="font-size:13.5px;color:var(--ink-faint)">Showing every row.</span></div>';
+  }else if(L.tool==='dedupe'){
+    h='<div class="toolrow"><button class="btn" id="ddgo" style="padding:7px 14px;font-size:14px">Remove duplicates</button>'+
+      '<span id="ddnote" style="font-size:13.5px;color:var(--ink-faint)">Compares whole rows and keeps the first of each.</span></div>';
+  }else if(L.tool==='findreplace'){
+    h='<div class="toolrow"><label>Find</label><input id="frf" type="text" style="width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:5px;font-size:14px">'+
+      '<label>Replace with</label><input id="frr" type="text" style="width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:5px;font-size:14px">'+
+      '<button class="btn" id="frgo" style="padding:7px 14px;font-size:14px">Replace all</button>'+
+      '<span id="frnote" style="font-size:13.5px;color:var(--ink-faint)"></span></div>';
+  }else if(L.tool==='condformat'){
+    h='<div class="toolrow"><label>Highlight selected cells that are</label>'+
+      '<select id="cfop"><option value="gt">greater than</option><option value="lt">less than</option></select>'+
+      '<input id="cfval" type="text" value="" style="width:80px;padding:6px 8px;border:1px solid var(--line);border-radius:5px;font-size:14px">'+
+      '<button class="btn" id="cfgo" style="padding:7px 14px;font-size:14px">Apply</button>'+
+      '<button class="btn-quiet" id="cfclr">Clear</button></div>';
+  }else if(L.tool==='validation'){
+    h='<div class="toolrow"><button class="btn" id="dvgo" style="padding:7px 14px;font-size:14px">Add drop-down list to column B</button>'+
+      '<span id="dvnote" style="font-size:13.5px;color:var(--ink-faint)">Allowed: '+(L.validList||[]).join(', ')+'</span></div>';
+  }else if(L.tool==='split'){
+    h='<div class="toolrow"><label>Split column A by</label><select id="spdel"><option value="-">a dash</option><option value=" ">a space</option><option value=",">a comma</option></select>'+
+      '<button class="btn" id="spgo" style="padding:7px 14px;font-size:14px">Text to Columns</button>'+
+      '<span id="spnote" style="font-size:13.5px;color:var(--ink-faint)">Splits into the columns to its right.</span></div>';
+  }else if(L.tool==='pivot'){
+    h='<div class="toolrow"><label>Group by</label><select id="pvrow"><option value="">choose a field</option>';
+    for(c=0;c<S.cols;c++)if(raw(ref(c,0))!=='')h+='<option value="'+c+'">'+esc(headerName(c))+'</option>';
+    h+='</select><label>Summarise</label><select id="pvval"><option value="">choose a field</option>';
+    for(c=0;c<S.cols;c++)if(raw(ref(c,0))!=='')h+='<option value="'+c+'">'+esc(headerName(c))+'</option>';
+    h+='</select><select id="pvagg"><option value="sum">Sum</option><option value="count">Count</option><option value="average">Average</option></select>'+
+      '<button class="btn" id="pvgo" style="padding:7px 14px;font-size:14px">Build it</button></div><div id="pivotout"></div>';
+  }
+  toolsEl.innerHTML=h;
+  if(L.tool==='sort'){
+    document.getElementById('sorttable').onclick=function(){sortNow(true,+document.getElementById('sortcol').value,document.getElementById('sortdir').value);};
+    document.getElementById('sortcolonly').onclick=function(){sortNow(false,+document.getElementById('sortcol').value,document.getElementById('sortdir').value);};
+  }
+  if(L.tool==='chart'){
+    document.getElementById('ctseg').onclick=function(e){
+      var b=e.target.closest?e.target.closest('button[data-t]'):null;if(!b)return;
+      T.chartType=b.getAttribute('data-t');
+      var bs=this.querySelectorAll('button');for(var i=0;i<bs.length;i++)bs[i].className=bs[i]===b?'on':'';
+      drawChart(L);check();
+    };
+    var az=document.getElementById('axzero');
+    if(az)az.onchange=function(){T.axisZero=az.checked;drawChart(L);check();};
+  }
+  if(L.tool==='format'){
+    document.getElementById('fmtseg').onclick=function(e){
+      var b=e.target.closest?e.target.closest('button[data-f]'):null;if(!b)return;
+      var f=b.getAttribute('data-f'),rr=rangeRefs(sel.a,sel.b)||[sel.b];
+      snapshot();
+      for(var i=0;i<rr.length;i++){
+        if(raw(rr[i])==='')continue;
+        if(!S.cells[rr[i]])continue;
+        if(f)S.cells[rr[i]].f=f;else delete S.cells[rr[i]].f;
+      }
+      var bs=this.querySelectorAll('button');for(var j=0;j<bs.length;j++)bs[j].className=bs[j]===b?'on':'';
+      render();check();
+    };
+  }
+  if(L.tool==='clip'){
+    document.getElementById('clcopy').onclick=function(){
+      T.clip={v:raw(sel.b),f:(S.cells[sel.b]&&S.cells[sel.b].f)||'',from:sel.b};
+      document.getElementById('clnote').textContent='Copied '+sel.b+' \u2014 it holds '+(T.clip.v||'nothing');
+    };
+    document.getElementById('clpaste').onclick=function(){
+      if(!T.clip)return;snapshot();
+      var p1=parseRef(T.clip.from),p2=parseRef(sel.b),v=T.clip.v;
+      if(v.charAt(0)==='=')v=shiftFormula(v,p2.c-p1.c,p2.r-p1.r);
+      setRaw(sel.b,v);if(T.clip.f&&S.cells[sel.b])S.cells[sel.b].f=T.clip.f;
+      T.pasteMode='formula';render();check();
+    };
+    document.getElementById('clpastev').onclick=function(){
+      if(!T.clip)return;snapshot();
+      var res=val(T.clip.from);
+      setRaw(sel.b,typeof res==='number'?String(res):String(res));
+      if(T.clip.f&&S.cells[sel.b])S.cells[sel.b].f=T.clip.f;
+      T.pasteMode='values';render();check();
+    };
+  }
+  if(L.tool==='filter'){
+    var fc=document.getElementById('flcol'),fv=document.getElementById('flval');
+    function fillVals(){
+      var c=+fc.value,last=blockRows(),seen={},o='';
+      for(var r=1;r<=last;r++){var v=String(val(ref(c,r)));if(v===''||seen[v])continue;seen[v]=1;o+='<option>'+esc(v)+'</option>';}
+      fv.innerHTML=o;
+    }
+    fc.onchange=fillVals;fillVals();
+    document.getElementById('flgo').onclick=function(){
+      var c=+fc.value,want=fv.value,last=blockRows(),n=0;
+      S.hidden={};
+      for(var r=1;r<=last;r++){if(String(val(ref(c,r)))!==want){S.hidden[r]=1;}else n++;}
+      T.filterCol=c;T.filterVal=want;T.filterOn=true;
+      document.getElementById('flnote').textContent='Showing '+n+' of '+last+' rows.';
+      render();check();
+    };
+    document.getElementById('flclr').onclick=function(){
+      S.hidden={};T.filterOn=false;document.getElementById('flnote').textContent='Showing every row.';render();check();
+    };
+  }
+  if(L.tool==='dedupe'){
+    document.getElementById('ddgo').onclick=function(){
+      snapshot();
+      var last=blockRows(),seen={},keep=[],r,c2;
+      for(r=1;r<=last;r++){
+        var key='';for(c2=0;c2<S.cols;c2++)key+=String(val(ref(c2,r)))+'\u0002';
+        if(key.replace(/\u0002/g,'')==='')continue;
+        if(seen[key])continue;seen[key]=1;keep.push(r);
+      }
+      var snap={};
+      for(c2=0;c2<S.cols;c2++)for(r=1;r<=last;r++)snap[ref(c2,r)]=S.cells[ref(c2,r)]?JSON.parse(JSON.stringify(S.cells[ref(c2,r)])):null;
+      for(r=1;r<=last;r++)for(c2=0;c2<S.cols;c2++)delete S.cells[ref(c2,r)];
+      for(var i=0;i<keep.length;i++)for(c2=0;c2<S.cols;c2++){var o=snap[ref(c2,keep[i])];if(o)S.cells[ref(c2,i+1)]=o;}
+      T.removed=last-keep.length;T.dedupeDone=true;
+      document.getElementById('ddnote').textContent='Removed '+T.removed+' duplicate row'+(T.removed===1?'':'s')+'.';
+      render();check();
+    };
+  }
+  if(L.tool==='findreplace'){
+    document.getElementById('frgo').onclick=function(){
+      var f=document.getElementById('frf').value,r2=document.getElementById('frr').value;
+      if(!f)return;
+      snapshot();var n=0;
+      for(var k in S.cells){
+        var v=S.cells[k].v;
+        if(v.charAt(0)==='=')continue;
+        var lead=v.charAt(0)==="'"?"'":'',body=lead?v.slice(1):v;
+        if(body.indexOf(f)>-1){S.cells[k].v=lead+body.split(f).join(r2);n++;}
+      }
+      T.replaced=(T.replaced||0)+n;
+      document.getElementById('frnote').textContent='Changed '+n+' cell'+(n===1?'':'s')+'.';
+      render();check();
+    };
+  }
+  if(L.tool==='condformat'){
+    document.getElementById('cfgo').onclick=function(){
+      var op=document.getElementById('cfop').value,x=parseFloat(document.getElementById('cfval').value);
+      if(isNaN(x))return;
+      snapshot();
+      var rr=rangeRefs(sel.a,sel.b)||[sel.b],n=0;
+      for(var i=0;i<rr.length;i++){
+        var v=numOf(rr[i]);if(v===null||!S.cells[rr[i]])continue;
+        var hit=(op==='gt')?(v>x):(v<x);
+        if(hit){S.cells[rr[i]].bg='#F8DED9';n++;}else delete S.cells[rr[i]].bg;
+      }
+      T.cfOp=op;T.cfVal=x;T.cfCount=n;T.cfDone=true;render();check();
+    };
+    document.getElementById('cfclr').onclick=function(){
+      for(var k in S.cells)delete S.cells[k].bg;
+      T.cfDone=false;render();check();
+    };
+  }
+  if(L.tool==='validation'){
+    document.getElementById('dvgo').onclick=function(){
+      S.valid={col:'B',list:L.validList||[]};T.validOn=true;
+      document.getElementById('dvnote').textContent='Drop-down applied. Try typing something that is not on the list.';
+      check();
+    };
+  }
+  if(L.tool==='split'){
+    document.getElementById('spgo').onclick=function(){
+      var del=document.getElementById('spdel').value,last=blockRows();
+      snapshot();var n=0;
+      for(var r=1;r<=last;r++){
+        var v=String(val(ref(0,r)));if(v==='')continue;
+        var parts=v.split(del);
+        for(var i=0;i<parts.length&&i+1<S.cols;i++)setRaw(ref(i+1,r),"'"+parts[i]);
+        n++;
+      }
+      T.splitDone=true;T.splitDelim=del;
+      document.getElementById('spnote').textContent='Split '+n+' rows.';
+      render();check();
+    };
+  }
+  if(L.tool==='pivot'){
+    document.getElementById('pvgo').onclick=function(){
+      var r=document.getElementById('pvrow').value,v=document.getElementById('pvval').value,a=document.getElementById('pvagg').value;
+      if(r===''||v===''){document.getElementById('pivotout').innerHTML='<p style="color:var(--ochre);font-size:14px;padding:10px 12px;margin:0">Choose both a field to group by and a field to summarise.</p>';return;}
+      T.pivRow=+r;T.pivVal=+v;T.pivAgg=a;T.pivBuilt=true;
+      var p=pivot(+r,+v,a),hh='<div class="pivotout"><table><tr><th>'+esc(headerName(+r))+'</th><th style="text-align:right">'+a.charAt(0).toUpperCase()+a.slice(1)+' of '+esc(headerName(+v))+'</th></tr>';
+      for(var i=0;i<p.rows.length;i++)hh+='<tr><td>'+esc(p.rows[i][0])+'</td><td class="n">'+(a==='count'?p.rows[i][1]:money(p.rows[i][1]))+'</td></tr>';
+      hh+='<tr class="tot"><td>Grand total</td><td class="n">'+(a==='count'?p.grand:money(p.grand))+'</td></tr></table></div>';
+      document.getElementById('pivotout').innerHTML=hh;
+      check();
+    };
+  }
+}
+function drawChart(L){
+  var box=document.getElementById('chartbox');if(!box)return;
+  if(!T.chartType){box.innerHTML='';return;}
+  var lab=L.chartLabels?rangeVals(L.chartLabels):[],vals=L.chartValues?rangeVals(L.chartValues):[];
+  var opts={axisZero:T.axisZero};
+  if(T.chartType==='scatter'&&L.chartX){opts.xs=rangeVals(L.chartX);opts.xlab=L.chartXLabel||'';}
+  box.innerHTML=svgChart(T.chartType,lab,vals,opts);
+}
+function rangeVals(spec){
+  var ab=spec.split(':'),rr=rangeRefs(ab[0],ab[1]),o=[];
+  if(!rr)return [];
+  for(var i=0;i<rr.length;i++)o.push(val(rr[i]));
+  return o;
+}
+
+var MODULES=[
+ {tag:'part 1',name:'Getting comfortable',from:0,to:5,
+  blurb:'Before any of it makes sense you need to be able to move around a spreadsheet without hesitating. Clicking, typing, fixing, undoing, selecting.',
+  earned:['Move around a spreadsheet without hesitating','Enter and correct data','Select a range and read its total','Recognise that ##### means a narrow column']},
+ {tag:'part 2',name:'Making it calculate',from:6,to:9,
+  blurb:'The equals sign, cell references, and the little square that copies a formula down a thousand rows. This is where a spreadsheet stops being a table and starts being a spreadsheet.',
+  earned:['Write formulas using cell references, not typed numbers','Total a range with SUM','Copy a formula down with the fill handle','Lock a reference with $ so it survives the drag']},
+ {tag:'part 3',name:'What kind of data is this?',from:10,to:12,
+  blurb:'Three short lessons that decide everything after them. Excel will calculate an average of anything you point it at, including things that have no average. Knowing what you are holding is the difference between analysis and nonsense.',
+  earned:['Tell categorical data from numerical, even when both are digits','Separate nominal from ordinal categories','Know when zero means none of it, and when it does not','Say which average a column is actually entitled to']},
+ {tag:'part 4',name:'Describing data',from:13,to:19,
+  blurb:'The block that first-year business statistics courses open with. Not just calculating a mean, but knowing when the mean is lying to you.',
+  earned:['Calculate mean, median, range and standard deviation','Explain what an outlier does to each of them','Flag suspicious values with the quartile rule','Choose which measure belongs in a report']},
+ {tag:'part 5',name:'Working with real data',from:20,to:23,
+  blurb:'Real files are messy and long. Sorting without wrecking the rows, counting with conditions, pulling matching values across, and summarising the lot in three dropdowns.',
+  earned:['Sort a table without breaking the rows apart','Count and total with a condition','Fetch a matching value with XLOOKUP','Summarise a whole dataset with a PivotTable']},
+ {tag:'part 6',name:'Showing what you found',from:24,to:25,
+  blurb:'A chart is an argument. Two lessons on picking one that makes the right argument, and spotting one that makes a false one.',
+  earned:['Choose a chart type that matches the question','Say what a scatter plot can and cannot prove','Spot a truncated axis before you believe a chart']},
+ {tag:'part 7',name:'Things that go wrong quietly',from:26,to:31,
+  blurb:'The failures nobody warns you about. Nothing turns red, nothing looks broken, and the number is simply wrong. This is the part that saves you in a real job.',
+  earned:['Spot numbers stored as text before they ruin a total','Read an Australian date and know when one is ambiguous','Keep a leading zero in a postcode or phone number','Format a number without changing what it is','Paste a result instead of a formula','Find the blank row that is eating half your data']},
+ {tag:'part 8',name:'Making Excel decide',from:32,to:34,
+  blurb:'IF is the function job ads ask for by name. It stops a spreadsheet being a calculator and turns it into something that applies a rule to two thousand rows without you reading any of them.',
+  earned:['Write an IF that applies a rule down a whole column','Combine conditions with AND and OR','Nest IFs to produce more than two outcomes','Know why the order of the tests decides the answer']},
+ {tag:'part 9',name:'Put it together',from:35,to:36,
+  blurb:'Two lessons with no instructions worth the name. A file arrives, something is wrong with it, and you have to work out what to do. This is the one that tells you whether the rest of it stuck.',
+  earned:['Take an unfamiliar file and find what is wrong with it','Clean data before trusting a single number from it','Choose the measure that suits the audience','Say what the data means, not just what it totals']},
+ {tag:'part 10',name:'Text, dates and errors',from:37,to:40,
+  blurb:'Real data arrives as glued-together codes, names with invisible spaces and dates Excel is unsure about. Four lessons on taking it apart and putting it right.',
+  earned:['Find the invisible spaces that break a lookup','Split a code into its parts with LEFT, MID and RIGHT','Pull the day, month and year out of a date','Handle an error without hiding it']},
+ {tag:'part 11',name:'Numbers that mean something',from:41,to:43,
+  blurb:'Percentage change, honest rounding, and putting a number on whether two things move together. The measures business subjects assume you already know.',
+  earned:['Calculate growth from one period to the next','Know when to round a value and when to just format it','Measure how strongly two things move together','Say what a correlation does not prove']},
+ {tag:'part 12',name:'The menu, not the formula',from:44,to:49,
+  blurb:'Six tools that live in the ribbon rather than in a formula bar. Filtering, deduplicating, replacing, highlighting, preventing bad entry and splitting columns. This is most of what an office job actually asks of you.',
+  earned:['Filter a dataset without deleting anything','Remove duplicate records safely','Fix inconsistent text everywhere at once','Highlight values by rule with conditional formatting','Stop bad data with a drop-down list','Split a column from the menu, and know when to use a formula instead']},
+ {tag:'part 13',name:'The judgement calls',from:50,to:51,
+  blurb:'Two lessons where the formula is the easy part. What to do about missing values, and when the mode is the only average you are entitled to.',
+  earned:['Decide honestly what to do about missing data','Explain why a blank is not a zero','Use the mode when the mean would be dishonest','State the rule you applied, every time']}
+];
+function modOf(i){for(var m=0;m<MODULES.length;m++)if(i>=MODULES[m].from&&i<=MODULES[m].to)return m;return 0;}
+function modDone(m){var d=0;for(var i=MODULES[m].from;i<=MODULES[m].to;i++)if(done[i])d++;return d;}
+
+/* ---------------- diagnostic ---------------- */
+var DG=[
+ {t:'Click a cell',q:'Click cell C3.',n:'Every cell has an address: the column letter, then the row number.',
+  setup:function(){grid(6,5,{});sel.a=sel.b='A1';},ok:function(){return sel.b==='C3';},mod:0},
+ {t:'Type something in',q:'Put the number 250 into B2.',n:'Select it, type, press enter.',
+  setup:function(){grid(6,5,{});sel.a=sel.b='A1';},ok:function(){return numOf('B2')===250;},mod:0},
+ {t:'Select a range',q:'Select all five numbers at once, from B2 down to B6.',n:'Hold the mouse down and drag.',
+  setup:function(){grid(8,5,{A1:'Day',B1:'Hours',A2:'Mon',B2:'6',A3:'Tue',B3:'4',A4:'Wed',B4:'8',A5:'Thu',B5:'5',A6:'Fri',B6:'7'});sel.a=sel.b='A1';},
+  ok:function(){var l=sel.a<sel.b?sel.a:sel.b,h=sel.a<sel.b?sel.b:sel.a;return l==='B2'&&h==='B6';},mod:0},
+ {t:'Add two cells',q:'In B4, add B2 and B3 together with a formula.',n:'A formula starts with an equals sign.',
+  setup:function(){grid(7,5,{A1:'Item',B1:'Amount',A2:'Coffee',B2:'340',A3:'Food',B3:'210',A4:'Total'});S.widths={A:110};sel.a=sel.b='B4';},
+  ok:function(){return raw('B4').charAt(0)==='='&&val('B4')===550;},mod:1},
+ {t:'Total a column',q:'In B8, total all six weeks. Use SUM.',n:'SUM takes a range: a start cell, a colon, an end cell.',
+  setup:function(){grid(9,5,{A1:'Week',B1:'Sales',A2:'W1',B2:'1240',A3:'W2',B3:'980',A4:'W3',B4:'1610',A5:'W4',B5:'1105',A6:'W5',B6:'1370',A7:'W6',B7:'890',A8:'Total'});S.widths={A:90};sel.a=sel.b='B8';},
+  ok:function(){return raw('B8').toUpperCase().indexOf('SUM')>-1&&val('B8')===7195;},mod:1},
+ {t:'Find the middle value',q:'In E2 put the mean of the rents, and in E3 the median.',n:'Two different answers to "what is typical".',
+  setup:function(){grid(9,6,{A1:'Room',B1:'Rent',A2:'R1',B2:'300',A3:'R2',B3:'340',A4:'R3',B4:'360',A5:'R4',B5:'380',A6:'R5',B6:'2400',D2:'Mean',D3:'Median'});S.widths={A:70,B:90,C:30,D:70,E:90};sel.a=sel.b='E2';},
+  ok:function(){return Math.abs(val('E2')-756)<1&&Math.abs(val('E3')-360)<0.01;},mod:2},
+ {t:'Count with a condition',q:'In E2, count how many orders came from NSW. The state to match is in E1.',n:'COUNTIF takes the range, then what to look for.',
+  setup:function(){grid(9,6,{A1:'Order',B1:'State',A2:'1',B2:'NSW',A3:'2',B3:'VIC',A4:'3',B4:'NSW',A5:'4',B5:'QLD',A6:'5',B6:'NSW',A7:'6',B7:'VIC',D1:'Match',E1:'NSW',D2:'Count'});S.widths={A:70,B:70,C:24,D:64,E:90};sel.a=sel.b='E2';},
+  ok:function(){return val('E2')===3;},mod:3}
+];
+var dgi=0,dgScore=[];
+function dgShow(i){
+  dgi=i;var D=DG[i];
+  document.getElementById('dgnum').textContent='check '+(i+1)+' of '+DG.length;
+  document.getElementById('dgtitle').textContent=D.t;
+  document.getElementById('dgtask').textContent=D.q;
+  document.getElementById('dgnote').textContent=D.n;
+  document.getElementById('dgresult').className='hide';
+  D.setup();dgRender();
+  document.getElementById('landing').classList.add('hide');
+  document.getElementById('lesson').classList.add('hide');
+  document.getElementById('diag').classList.remove('hide');
+  window.scrollTo(0,0);
+}
+function dgRender(){
+  gridEl=document.getElementById('dggrid');render();
+  document.getElementById('dgst').textContent='Selected: '+(sel.a===sel.b?sel.b:sel.a+':'+sel.b);
+}
+function dgAdvance(passed){
+  dgScore.push(passed);
+  if(dgi<DG.length-1)dgShow(dgi+1);else dgFinish();
+}
+function dgFinish(){
+  var byMod=[0,0,0,0,0],tot=[0,0,0,0,0];
+  for(var i=0;i<DG.length;i++){var m=DG[i].mod;tot[m]++;if(dgScore[i])byMod[m]++;}
+  var startAt=0,found=false;
+  for(var m2=0;m2<MODULES.length;m2++){
+    if(tot[m2]&&byMod[m2]<tot[m2]){startAt=MODULES[m2].from;found=true;break;}
+  }
+  if(!found)startAt=MODULES[3].from;
+  var h='<div class="milestone on"><h3>Where you should start</h3><p>';
+  var passed=dgScore.filter(function(x){return x;}).length;
+  if(passed===0)h+='You got none of these, which is exactly who this site was built for. Start at the very beginning — lesson 1 assumes you have never opened a spreadsheet.';
+  else if(passed===DG.length)h+='You got all seven. The basics are not your problem. Jump straight to the parts on real data and charts.';
+  else h+='You handled '+passed+' of the seven. No point repeating what you already know, so start where the gap actually is.';
+  h+='</p><ul>';
+  for(var k=0;k<MODULES.length;k++){
+    var M=MODULES[k],state;
+    if(!tot[k])state='not tested';
+    else if(byMod[k]===tot[k])state='you can skip this';
+    else if(byMod[k]===0)state='start here';
+    else state='worth a look';
+    h+='<li><b>'+M.name+'</b> — '+state+'</li>';
+  }
+  h+='</ul></div><div class="lessonbar" style="margin-top:14px"><button class="btn" id="dggo">Start at lesson '+(startAt+1)+': '+LESSONS[startAt].title+'</button><button class="btn-quiet" id="dgall">Show me all five parts</button></div>';
+  var r=document.getElementById('dgresult');
+  r.className='';r.innerHTML=h;
+  document.getElementById('dgnext').classList.add('hide');
+  document.getElementById('dgskip').classList.add('hide');
+  document.getElementById('dggo').onclick=function(){gridEl=document.getElementById('grid');document.getElementById('diag').classList.add('hide');load(startAt);};
+  document.getElementById('dgall').onclick=function(){gridEl=document.getElementById('grid');document.getElementById('diag').classList.add('hide');showList();};
+}
+function dgStart(){
+  dgi=0;dgScore=[];
+  document.getElementById('dgnext').classList.remove('hide');
+  document.getElementById('dgskip').classList.remove('hide');
+  dgShow(0);
+}
+document.getElementById('dgnext').onclick=function(){dgAdvance(!!DG[dgi].ok());};
+document.getElementById('dgskip').onclick=function(){dgAdvance(false);};
+document.getElementById('godiag').onclick=dgStart;
+
+/* ---------------- lesson flow ---------------- */
+var fbEl=document.getElementById('fb'),nextBtn=document.getElementById('next'),done={};
+var SAVEKEY='efz.progress.v1';
+function loadProgress(){try{var r=window.localStorage.getItem(SAVEKEY);if(r)done=JSON.parse(r)||{};}catch(e){}}
+function saveProgress(){try{window.localStorage.setItem(SAVEKEY,JSON.stringify(done));}catch(e){}}
+function clearProgress(){done={};try{window.localStorage.removeItem(SAVEKEY);}catch(e){}paintList();}
+loadProgress();
+function load(i){
+  lesson=i;filledByDrag=0;
+  var L=LESSONS[i];
+  var mi=modOf(i),M=MODULES[mi];
+  document.getElementById('lnum').innerHTML='<b>'+M.tag+' &middot; '+M.name+'</b> &nbsp;lesson '+(i-M.from+1)+' of '+(M.to-M.from+1);
+  document.getElementById('milestone').className='milestone';
+  document.getElementById('finale').className='finale';
+  document.getElementById('reassure').className='reassure'+(i<3?' on':'');
+  document.getElementById('ltitle').textContent=L.title;
+  document.getElementById('ltask').textContent=L.task;
+  document.getElementById('lteach').innerHTML=L.teach;
+  document.getElementById('hint').textContent=L.hint;
+  document.getElementById('hint').style.display='none';
+  fbEl.className='fb';nextBtn.classList.add('hide');
+  L.setup();buildTools(L);render();paintNav();
+  document.getElementById('landing').classList.add('hide');
+  document.getElementById('lesson').classList.remove('hide');
+  window.scrollTo(0,0);
+}
+function check(){
+  var r=LESSONS[lesson].check();
+  if(!r)return;
+  var code=r[0],msg=r[1];
+  if(code===1){
+    fbEl.className='fb show ok';fbEl.textContent=msg;
+    done[lesson]=true;saveProgress();
+    var mi=modOf(lesson),M=MODULES[mi],ms=document.getElementById('milestone');
+    if(modDone(mi)===(M.to-M.from+1)){
+      var li='';for(var q=0;q<M.earned.length;q++)li+='<li>'+M.earned[q]+'</li>';
+      ms.innerHTML='<h3>'+M.name+' &mdash; finished</h3><p>That is '+(M.to-M.from+1)+' lessons done. You can now:</p><ul>'+li+'</ul>';
+      ms.className='milestone on';
+    }else{ms.className='milestone';}
+    var alldone=true;for(var z=0;z<LESSONS.length;z++)if(!done[z])alldone=false;
+    if(alldone){
+      ms.className='milestone';
+      document.getElementById('finale').innerHTML='<h2>You started not knowing what a cell was.</h2>'+
+        '<p>Twenty-three lessons ago you did not know that the letters across the top were columns. You can now write a formula, lock a reference, sort a table without wrecking it, summarise a few thousand rows in three dropdowns, and tell someone why the average is the wrong number to report.</p>'+
+        '<p>Nobody told you any of that. Now somebody has.</p>';
+      document.getElementById('finale').className='finale on';
+    }
+    nextBtn.classList.remove('hide');
+    if(lesson<LESSONS.length-1){
+      var nm=modOf(lesson+1);
+      nextBtn.textContent=(nm!==mi)?('Start '+MODULES[nm].tag+': '+MODULES[nm].name):('Next: '+LESSONS[lesson+1].title);
+    }else nextBtn.textContent='Back to the lesson list';
+  }else if(msg){
+    fbEl.className='fb show '+(code===-1?'bad':'no');fbEl.textContent=msg;
+  }else{
+    fbEl.className='fb';
+  }
+  paintList();
+}
+nextBtn.addEventListener('click',function(){
+  if(lesson<LESSONS.length-1)load(lesson+1);else showList();
+});
+document.getElementById('prev').addEventListener('click',function(){if(lesson>0)load(lesson-1);});
+document.getElementById('skipnext').addEventListener('click',function(){
+  if(lesson<LESSONS.length-1)load(lesson+1);else showList();
+});
+function paintNav(){
+  var p=document.getElementById('prev'),n=document.getElementById('skipnext');
+  p.disabled=(lesson===0);
+  n.textContent=(lesson===LESSONS.length-1)?'All lessons':'Skip ahead \u2192';
+}
+document.getElementById('reset').addEventListener('click',function(){load(lesson);});
+document.getElementById('hintbtn').addEventListener('click',function(){
+  var h=document.getElementById('hint');
+  h.style.display=h.style.display==='none'?'block':'none';
+});
+function showList(){
+  document.getElementById('lesson').classList.add('hide');
+  document.getElementById('landing').classList.remove('hide');
+  document.getElementById('namebox').textContent='A1';
+  var fb=document.getElementById('fbar');fb.textContent='Excel From Zero';fb.className='fbar empty';
+  paintList();window.scrollTo(0,0);
+}
+document.getElementById('tolist').addEventListener('click',showList);
+document.getElementById('start').addEventListener('click',function(){load(0);});
+document.getElementById('browse').addEventListener('click',function(){
+  document.getElementById('lgrid').scrollIntoView({behavior:'smooth',block:'start'});
+});
+function paintRing(){
+  var el=document.getElementById('ring');if(!el)return;
+  var d=0;for(var i=0;i<LESSONS.length;i++)if(done[i])d++;
+  var pct=d/LESSONS.length,C=2*Math.PI*26;
+  var line;
+  if(d===0)line='Nothing done yet, which is the right place to be. Part 1 assumes you have never opened a spreadsheet.';
+  else if(d===LESSONS.length)line='All twenty-three. You can open an unfamiliar spreadsheet and know what to do with it.';
+  else if(pct<0.3)line='You have started. The first part is the one nobody ever teaches, so this is the useful bit.';
+  else if(pct<0.6)line='Good going. You are past the fiddly bits and into the part that shows up in real work.';
+  else line='Nearly there. What is left is mostly about reading data rather than typing into it.';
+  el.innerHTML='<svg width="62" height="62" viewBox="0 0 62 62" aria-hidden="true">'+
+    '<circle cx="31" cy="31" r="26" fill="none" stroke="#EEEAF3" stroke-width="7"/>'+
+    '<circle cx="31" cy="31" r="26" fill="none" stroke="#46766A" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(C*(1-pct)).toFixed(1)+'" transform="rotate(-90 31 31)"/>'+
+    '<text x="31" y="36" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="15" fill="#2E2B36">'+d+'</text></svg>'+
+    '<div><p class="rt">'+d+' of '+LESSONS.length+' done</p><p class="rs">'+line+'</p></div>';
+}
+function paintList(){
+  paintRing();
+  var el=document.getElementById('lgrid'),h='';
+  for(var m=0;m<MODULES.length;m++){
+    var M=MODULES[m],tot=M.to-M.from+1,dn=modDone(m);
+    h+='<div class="mod'+(dn===tot?' done':'')+'"><div class="mod-h"><span class="mod-tag">'+M.tag+'</span><h3>'+M.name+'</h3>'+
+       '<span class="mod-count">'+dn+' / '+tot+'</span></div>'+
+       '<p class="mod-blurb">'+M.blurb+'</p>'+
+       '<div class="bar"><i style="width:'+Math.round(dn/tot*100)+'%"></i></div><div class="lgrid-in">';
+    for(var i=M.from;i<=M.to;i++){
+      h+='<button class="lcard'+(done[i]?' done':'')+'" data-i="'+i+'"><span class="n">'+(i+1)+'</span><span><span class="t">'+LESSONS[i].title+'</span><span class="s">'+LESSONS[i].sub+'</span></span></button>';
+    }
+    h+='</div></div>';
+  }
+  el.innerHTML=h;
+}
+document.getElementById('lgrid').addEventListener('click',function(e){
+  var b=e.target.closest?e.target.closest('.lcard'):null;
+  if(b)load(+b.getAttribute('data-i'));
+});
+paintList();
+var ra=document.getElementById('resetall');
+if(ra)ra.addEventListener('click',function(e){e.preventDefault();clearProgress();});
+})();
+</script>
+<script>
+(function(){
+var c=document.getElementById('dcell');if(!c)return;
+var fb=document.getElementById('dfb'),msg=document.getElementById('dmsg');
+function say(t,col){msg.textContent=t;msg.style.color=col||'var(--ink-soft)';}
+c.addEventListener('input',function(){fb.textContent=c.value||'empty';fb.style.color=c.value?'var(--ink)':'var(--ink-faint)';});
+c.addEventListener('keydown',function(e){
+if(e.key!=='Enter')return;
+var rawv=c.value.trim(),f=rawv.toUpperCase().replace(/\s/g,'');
+if(!rawv){say('Nothing there yet. Type =B2+B3 and press enter.');return;}
+if(f.charAt(0)!=='='){say('No equals sign, so Excel just stored that as words. The equals sign is what turns a cell into a calculation. Try again.','var(--ochre)');return;}
+var body=f.slice(1),r=null;
+if(/^SUM\(B2:B3\)$/.test(body)||/^SUM\(B2,B3\)$/.test(body)||/^B2\+B3$/.test(body)||/^B3\+B2$/.test(body))r=550;
+else if(/^340\+210$/.test(body)||/^210\+340$/.test(body)){
+  c.value='550';fb.textContent=rawv;
+  say('That says 550 and it is right today. But you typed the numbers in by hand — change the coffee sales tomorrow and this cell will still stubbornly say 550. Cell names instead: =B2+B3','var(--ochre)');return;
+}
+else{var t=body.replace(/B2/g,'340').replace(/B3/g,'210');if(/^[0-9+\-*/().]+$/.test(t)){try{r=Function('"use strict";return ('+t+')')();}catch(err){r=null;}}}
+if(r===null||typeof r!=='number'||!isFinite(r)){say('Excel would show an error for that. The two numbers you want are in B2 and B3.','var(--brick)');return;}
+r=Math.round(r*100)/100;c.value=r.toLocaleString('en-AU');fb.textContent=rawv;
+if(r===550)say('That is a working formula. The cell shows 550, but look at the bar above — it is holding =B2+B3, not the number. Change B2 and the total fixes itself. That is the whole point of a spreadsheet, and you just did it.','var(--ledger)');
+else say('It calculated: '+r.toLocaleString('en-AU')+'. Not the total we were after, but that is a working formula.');
+});
+})();
+</script>
+</body>
+</html>
